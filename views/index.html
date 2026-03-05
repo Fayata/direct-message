@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WA Sender — Minimal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0f11;
+    --surface: #161719;
+    --surface2: #1e2023;
+    --border: #2a2d32;
+    --border-subtle: #222529;
+    --accent: #00e5a0;
+    --accent-dim: rgba(0,229,160,0.08);
+    --accent-mid: rgba(0,229,160,0.18);
+    --text: #e8eaed;
+    --text-muted: #6b7280;
+    --text-dim: #3d4148;
+    --danger: #ff5b6b;
+    --warn: #f5a623;
+    --mono: 'DM Mono', monospace;
+    --sans: 'Syne', sans-serif;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(14,15,17,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--sans);
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+    color: var(--text);
+  }
+
+  .logo-icon {
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    background: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  .logo-icon svg { width: 15px; height: 15px; }
+
+  .header-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--accent);
+    background: var(--accent-dim);
+    border: 1px solid rgba(0,229,160,0.2);
+    padding: 3px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.06em;
+  }
+
+  .app {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    max-width: 1280px;
+    margin: 0 auto;
+    width: 100%;
+    padding: 24px 24px;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .panel-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-subtle);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .panel-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .panel-title svg { opacity: 0.6; }
+
+  .panel-body { padding: 16px; flex: 1; display: flex; flex-direction: column; gap: 14px; }
+
+  label {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="tel"], textarea, select {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 10px 12px;
+    outline: none;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    resize: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  input::placeholder, textarea::placeholder { color: var(--text-dim); }
+
+  .phone-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .country-code {
+    width: 78px;
+    flex-shrink: 0;
+  }
+
+  select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 28px;
+    cursor: pointer;
+  }
+
+  .message-wrap {
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #message {
+    flex: 1;
+    min-height: 160px;
+    line-height: 1.6;
+    font-size: 13.5px;
+    padding-bottom: 36px;
+  }
+
+  .msg-meta {
+    position: absolute;
+    bottom: 10px;
+    right: 12px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .msg-meta span { color: var(--accent); }
+
+  .fmt-toolbar {
+    display: flex;
+    gap: 4px;
+    padding: 8px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  .fmt-btn {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  .fmt-btn:hover { background: var(--accent-dim); color: var(--accent); }
+
+  .fmt-sep { width: 1px; background: var(--border); margin: 4px 2px; }
+
+  .emoji-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    cursor: pointer;
+    padding: 8px 10px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .emoji-toggle span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .emoji-toggle-icon {
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  .emoji-section {
+    margin-top: 8px;
+  }
+
+  .emoji-tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 10px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .etab {
+    flex: 1;
+    padding: 6px 4px;
+    background: transparent;
+    border: none;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .etab.active { background: var(--surface); }
+  .etab:hover { background: var(--accent-dim); }
+
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+    max-height: 200px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .emoji-grid::-webkit-scrollbar { width: 4px; }
+  .emoji-grid::-webkit-scrollbar-track { background: transparent; }
+  .emoji-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .emoji-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s, transform 0.1s;
+    line-height: 1;
+  }
+
+  .emoji-btn:hover {
+    background: var(--accent-dim);
+    transform: scale(1.15);
+  }
+
+  .template-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 320px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .template-list::-webkit-scrollbar { width: 4px; }
+  .template-list::-webkit-scrollbar-track { background: transparent; }
+  .template-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  .tpl-card {
+    background: var(--surface2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s;
+    position: relative;
+  }
+
+  .tpl-card:hover {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+
+  .tpl-card-name {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 0.04em;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .tpl-card-preview {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .tpl-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s;
+  }
+
+  .tpl-card:hover .tpl-actions { opacity: 1; }
+
+  .tpl-act-btn {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 11px;
+    transition: color 0.15s, background 0.15s;
+  }
+
+  .tpl-act-btn:hover { color: var(--accent); background: var(--accent-dim); }
+  .tpl-act-btn.del:hover { color: var(--danger); background: rgba(255,91,107,0.1); }
+
+  .save-tpl-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .save-tpl-row input { flex: 1; }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    border: none;
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    width: 100%;
+  }
+
+  .btn-primary:hover {
+    background: #00ffb2;
+    box-shadow: 0 0 24px rgba(0,229,160,0.3);
+    transform: translateY(-1px);
+  }
+
+  .btn-primary:active { transform: translateY(0); }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-dim); }
+
+  .btn-sm { padding: 7px 12px; font-size: 12px; }
+
+  .send-panel .panel-body {
+    gap: 12px;
+  }
+
+  .send-info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: var(--surface2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+  }
+
+  .send-info-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .send-info-val {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(60px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 13px;
+    font-family: var(--mono);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 999;
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1), opacity 0.3s;
+    opacity: 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+    pointer-events: none;
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+  }
+
+  .toast.success { border-color: var(--accent); }
+  .toast.error { border-color: var(--danger); }
+
+  .toast-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .toast.success .toast-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); }
+  .toast.error .toast-dot { background: var(--danger); }
+
+  .preview-bubble {
+    background: var(--surface2);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.65;
+    color: var(--text-muted);
+    min-height: 60px;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .preview-bubble em { color: var(--text); font-style: italic; }
+  .preview-bubble strong { color: var(--text); font-weight: 600; }
+
+  .char-bar {
+    height: 2px;
+    background: var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+  }
+
+  .char-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 1px;
+    transition: width 0.2s, background 0.2s;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--border-subtle);
+    margin: 4px 0;
+  }
+
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .panel { animation: fadeIn 0.35s ease both; }
+  .panel:nth-child(2) { animation-delay: 0.07s; }
+  .panel:nth-child(3) { animation-delay: 0.14s; }
+
+  .live-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+    display: inline-block;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--accent); }
+    50% { opacity: 0.4; box-shadow: 0 0 2px var(--accent); }
+  }
+
+  .flex-row { display: flex; align-items: center; gap: 8px; }
+  .flex-1 { flex: 1; }
+
+  .hidden { display: none !important; }
+
+  /* Mobile layout */
+  @media (max-width: 900px) {
+    header {
+      padding: 0 16px;
+    }
+
+    .app {
+      grid-template-columns: 1fr;
+      padding: 16px 14px 20px;
+      gap: 12px;
+    }
+
+    .panel {
+      width: 100%;
+    }
+
+    .panel-body {
+      padding: 14px;
+      gap: 12px;
+    }
+
+    .message-wrap #message {
+      min-height: 140px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+    </div>
+    WA Sender
+  </div>
+  <div class="header-badge"><span class="live-dot"></span> &nbsp;READY</div>
+</header>
+
+<div class="app">
+
+  <div class="panel" style="animation-delay:0s">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        Compose
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div>
+        <label>Recipient</label>
+        <div class="phone-row">
+          <select class="country-code" id="countryCode">
+            <option value="62">🇮🇩 +62</option>
+            <option value="1">🇺🇸 +1</option>
+            <option value="44">🇬🇧 +44</option>
+            <option value="65">🇸🇬 +65</option>
+            <option value="60">🇲🇾 +60</option>
+            <option value="61">🇦🇺 +61</option>
+            <option value="81">🇯🇵 +81</option>
+            <option value="82">🇰🇷 +82</option>
+            <option value="86">🇨🇳 +86</option>
+            <option value="91">🇮🇳 +91</option>
+          </select>
+          <input type="tel" id="phoneNumber" placeholder="812-3456-7890" style="flex:1">
+        </div>
+      </div>
+
+      <div>
+        <label>Format</label>
+        <div class="fmt-toolbar">
+          <button class="fmt-btn" onclick="wrapText('*','*')" title="Bold">B</button>
+          <button class="fmt-btn" onclick="wrapText('_','_')" title="Italic" style="font-style:italic">I</button>
+          <button class="fmt-btn" onclick="wrapText('~','~')" title="Strikethrough" style="text-decoration:line-through">S</button>
+          <button class="fmt-btn" onclick="wrapText('```','```')" title="Monospace" style="font-family:monospace;font-size:10px">{ }</button>
+          <div class="fmt-sep"></div>
+          <button class="fmt-btn" onclick="insertText('\n• ')" title="Bullet">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>
+          </button>
+          <button class="fmt-btn" onclick="clearMsg()" title="Clear">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <div class="message-wrap flex-1">
+        <label>Message</label>
+        <textarea id="message" placeholder="Tulis pesan Anda di sini..." oninput="updatePreview(); updateCharCount()"></textarea>
+        <div class="msg-meta"><span id="charCount">0</span> karakter</div>
+      </div>
+
+      <div class="char-bar"><div class="char-bar-fill" id="charBar" style="width:0%"></div></div>
+
+      <div>
+        <label>Form Link</label>
+        <div class="flex-row">
+          <input type="checkbox" id="useFormLink" style="width:auto;flex:0">
+          <input type="text" id="formLinkText" placeholder="Contoh: Isi data diri di sini" style="flex:1">
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="panel" style="animation-delay:0.07s">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 13s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg>
+        Emoji & Preview
+      </div>
+    </div>
+    <div class="panel-body">
+
+      <div style="flex:1; display:flex; flex-direction:column; gap:8px;">
+        <label>Preview</label>
+        <div class="preview-bubble" id="preview">Pesan Anda akan tampil di sini...</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <div class="emoji-toggle" onclick="toggleEmoji()">
+          <span><span>😊</span> <span>Emoji</span></span>
+          <span class="emoji-toggle-icon" id="emojiToggleIcon">Tampilkan ▼</span>
+        </div>
+        <div id="emojiContainer" class="emoji-section hidden">
+          <div class="emoji-tabs">
+            <button class="etab active" onclick="showEmojiCat(0,this)">😊</button>
+            <button class="etab" onclick="showEmojiCat(1,this)">🎉</button>
+            <button class="etab" onclick="showEmojiCat(2,this)">💼</button>
+            <button class="etab" onclick="showEmojiCat(3,this)">❤️</button>
+            <button class="etab" onclick="showEmojiCat(4,this)">🌟</button>
+            <button class="etab" onclick="showEmojiCat(5,this)">🤝</button>
+          </div>
+          <div class="emoji-grid" id="emojiGrid"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <button class="btn btn-primary" onclick="sendMessage()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Kirim via WhatsApp
+      </button>
+
+    </div>
+  </div>
+
+  <div class="panel" style="animation-delay:0.14s">
+    <div class="panel-header">
+      <div class="panel-title">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/></svg>
+        Templates
+      </div>
+      <span style="font-family:var(--mono);font-size:10px;color:var(--text-dim)" id="tplCount">0 saved</span>
+    </div>
+    <div class="panel-body">
+
+      <div>
+        <label>Save Current</label>
+        <div class="save-tpl-row">
+          <input type="text" id="tplName" placeholder="Nama template...">
+          <button class="btn btn-ghost btn-sm" onclick="saveTemplate()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Save
+          </button>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div style="flex:1; overflow:hidden; display:flex; flex-direction:column; gap:8px;">
+        <label>Saved Templates</label>
+        <div class="template-list" id="templateList"></div>
+        <div id="tplEmpty" style="text-align:center;padding:20px 0;font-family:var(--mono);font-size:11px;color:var(--text-dim);">
+          Belum ada template tersimpan
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div>
+        <label>Session Info</label>
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          <div class="send-info-row">
+            <span class="send-info-label">Terkirim hari ini</span>
+            <span class="send-info-val" id="sentCount">0</span>
+          </div>
+          <div class="send-info-row">
+            <span class="send-info-label">Templates</span>
+            <span class="send-info-val" id="tplCountVal">0</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg"></span>
+</div>
+
+<script>
+const emojiCategories = [
+  [
+    '\u{1F60A}','\u{1F600}','\u{1F603}','\u{1F604}','\u{1F601}','\u{1F606}','\u{1F605}','\u{1F602}','\u{1F923}',
+    '\u{1F970}','\u{1F60D}','\u{1F929}','\u{1F618}','\u{1F617}','\u{1F619}','\u{1F61A}','\u{1F642}','\u{1F917}',
+    '\u{1F60C}','\u{1F614}','\u{1F62A}','\u{1F634}','\u{1F61B}','\u{1F61C}','\u{1F61D}','\u{1F924}','\u{1F644}',
+    '\u{1F612}','\u{1F610}','\u{1F611}','\u{1F636}','\u{1F60F}','\u{1F623}','\u{1F625}','\u{1F62E}','\u{1F62F}',
+    '\u{1F632}','\u{1F635}','\u{1F92F}','\u{1F631}','\u{1F628}','\u{1F630}','\u{1F627}','\u{1F622}','\u{1F62D}',
+    '\u{1F613}','\u{1F629}','\u{1F62B}','\u{1F971}','\u{1F620}','\u{1F621}','\u{1F624}','\u{1F47F}'
+  ],
+  [
+    '\u{1F389}','\u{1F38A}','\u{1F388}','\u{1F381}','\u{1F382}','\u{1F380}','\u{1F3C6}','\u{1F947}','\u{1F948}',
+    '\u{1F949}','\u{1F396}','\u{1F3C5}','\u{1F397}','\u{1F39F}','\u{1F3AA}','\u{1F3AB}','\u{1F3A8}','\u{1F3AD}',
+    '\u{1F3AC}','\u{1F3A4}','\u{1F3A7}','\u{1F3B5}','\u{1F3B6}','\u{1F3B7}','\u{1F3B8}','\u{1F3B9}','\u{1F3BA}',
+    '\u{1F3BB}','\u{1F941}','\u{1F3AE}','\u{1F579}','\u{1F3B2}','\u{1F0CF}','\u{1F004}','\u{1F3AF}','\u{1F3B3}',
+    '\u{1F3BE}','\u{1F3C0}','\u{1F3C8}','\u{1F3C9}','\u{1F6A9}','\u{1F6F9}','\u{1F938}','\u{1F973}','\u{1F64C}',
+    '\u{1F44F}','\u{1F932}','\u{1F64F}'
+  ],
+  [
+    '\u{1F4BC}','\u{1F4CA}','\u{1F4C8}','\u{1F4C9}','\u{1F4CB}','\u{1F4CC}','\u{1F4CD}','\u{1F4CE}','\u{1F587}',
+    '\u{1F4CF}','\u{1F4D0}','\u{2702}','\u{1F5C3}','\u{1F5C4}','\u{1F5D1}','\u{1F58A}','\u{270F}','\u{1F58B}',
+    '\u{1F4DD}','\u{1F4BB}','\u{1F5A5}','\u{1F5A8}','\u{2328}','\u{1F5B1}','\u{1F4F1}','\u{1F4F2}','\u{260E}',
+    '\u{1F4DE}','\u{1F4DF}','\u{1F4E0}','\u{1F4FA}','\u{1F4F7}','\u{1F4F8}','\u{1F4FD}','\u{1F3A5}','\u{1F4E1}',
+    '\u{1F52D}','\u{1F52C}','\u{1F4A1}','\u{1F526}','\u{1F527}','\u{1F528}','\u{2699}','\u{1F6E0}','\u{1F529}'
+  ],
+  [
+    '\u{2764}','\u{1F9E1}','\u{1F49B}','\u{1F49A}','\u{1F499}','\u{1F49C}','\u{1F5A4}','\u{1F90D}','\u{1F90E}',
+    '\u{1F497}','\u{1F493}','\u{1F495}','\u{1F496}','\u{1F49E}','\u{1F49D}','\u{1F494}','\u{2763}','\u{1F48B}',
+    '\u{1F48C}','\u{1F48D}','\u{1F48E}','\u{1F48F}','\u{1F491}','\u{1F492}','\u{1F339}','\u{1F338}','\u{1F490}',
+    '\u{1F33A}','\u{1F33B}','\u{1F33C}','\u{1F31E}','\u{1F31D}','\u{1F31C}','\u{1F31B}','\u{1F31A}','\u{1F31F}'
+  ],
+  [
+    '\u{1F31F}','\u{2B50}','\u{2728}','\u{1F4AB}','\u{1F320}','\u{1F30C}','\u{1F319}','\u{2600}','\u{1F324}',
+    '\u{26C5}','\u{1F325}','\u{2601}','\u{1F326}','\u{1F327}','\u{26C8}','\u{1F329}','\u{1F328}','\u{2744}',
+    '\u{2603}','\u{26C4}','\u{1F32C}','\u{1F4A8}','\u{1F4A7}','\u{1F4A6}','\u{1F30A}','\u{1F308}','\u{1F33C}',
+    '\u{1F337}','\u{1F331}','\u{1F33F}','\u{1F340}','\u{1F341}','\u{1F342}','\u{1F343}','\u{1F334}','\u{1F335}',
+    '\u{1F38B}','\u{1F38D}','\u{1F33E}','\u{1F344}','\u{1F330}','\u{1F98B}','\u{1F41D}'
+  ],
+  [
+    '\u{1F91D}','\u{1F44D}','\u{1F44E}','\u{1F44C}','\u{270C}','\u{1F91E}','\u{1F91F}','\u{1F918}','\u{1F919}',
+    '\u{1F448}','\u{1F449}','\u{1F446}','\u{261D}','\u{1F447}','\u{1F44B}','\u{1F91A}','\u{1F590}','\u{270B}',
+    '\u{1F596}','\u{1F44F}','\u{1F64C}','\u{1F450}','\u{1F932}','\u{1F64F}','\u{270D}','\u{1F485}','\u{1F933}',
+    '\u{1F4AA}','\u{1F9BE}','\u{1F9BF}','\u{1F9B5}','\u{1F9B6}','\u{1F4B0}','\u{1F4B5}','\u{1F4B6}','\u{1F4B7}',
+    '\u{1F4B8}','\u{1F4B3}','\u{1F3E6}','\u{1F4E6}','\u{1F4EB}','\u{1F4EC}','\u{1F4ED}','\u{1F4EE}','\u{1F3E2}'
+  ],
+];
+
+let activeEmojiCat = 0;
+
+function showEmojiCat(idx, btn) {
+  activeEmojiCat = idx;
+  document.querySelectorAll('.etab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderEmojis();
+}
+
+function toggleEmoji() {
+  const container = document.getElementById('emojiContainer');
+  const icon = document.getElementById('emojiToggleIcon');
+  const isHidden = container.classList.contains('hidden');
+  if (isHidden) {
+    container.classList.remove('hidden');
+    icon.textContent = 'Sembunyikan ▲';
+    renderEmojis();
+  } else {
+    container.classList.add('hidden');
+    icon.textContent = 'Tampilkan ▼';
+  }
+}
+
+function renderEmojis() {
+  const grid = document.getElementById('emojiGrid');
+  grid.innerHTML = '';
+  emojiCategories[activeEmojiCat].forEach(e => {
+    const btn = document.createElement('button');
+    btn.className = 'emoji-btn';
+    btn.textContent = e;
+    btn.title = e;
+    btn.onclick = () => insertEmoji(e);
+    grid.appendChild(btn);
+  });
+}
+
+function insertEmoji(e) {
+  const ta = document.getElementById('message');
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const val = ta.value;
+  ta.value = val.slice(0, start) + e + val.slice(end);
+  ta.selectionStart = ta.selectionEnd = start + [...e].length;
+  ta.focus();
+  updatePreview();
+  updateCharCount();
+}
+
+function wrapText(before, after) {
+  const ta = document.getElementById('message');
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const sel = ta.value.slice(start, end);
+  ta.value = ta.value.slice(0, start) + before + (sel || 'teks') + after + ta.value.slice(end);
+  ta.selectionStart = start + before.length;
+  ta.selectionEnd = start + before.length + (sel || 'teks').length;
+  ta.focus();
+  updatePreview();
+  updateCharCount();
+}
+
+function insertText(txt) {
+  const ta = document.getElementById('message');
+  const start = ta.selectionStart;
+  ta.value = ta.value.slice(0, start) + txt + ta.value.slice(start);
+  ta.selectionStart = ta.selectionEnd = start + txt.length;
+  ta.focus();
+  updatePreview();
+  updateCharCount();
+}
+
+function clearMsg() {
+  document.getElementById('message').value = '';
+  updatePreview();
+  updateCharCount();
+}
+
+function buildMessageWithLink() {
+  let msg = document.getElementById('message').value;
+  const useForm = document.getElementById('useFormLink')?.checked;
+  if (useForm) {
+    const custom = document.getElementById('formLinkText')?.value.trim();
+    const base = (typeof window !== 'undefined' ? window.location.origin : '');
+    const link = base + '/form';
+    const prefix = custom || 'Isi data diri di sini:';
+    msg = msg + '\n\n' + prefix + ' ' + link;
+  }
+  return msg;
+}
+
+function updatePreview() {
+  const msg = buildMessageWithLink();
+  if (!msg.trim()) {
+    document.getElementById('preview').innerHTML = '<span style="color:var(--text-dim)">Pesan Anda akan tampil di sini...</span>';
+    return;
+  }
+  let html = msg
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/\*([^*\n]+)\*/g,'<strong>$1</strong>')
+    .replace(/_([^_\n]+)_/g,'<em>$1</em>')
+    .replace(/~([^~\n]+)~/g,'<span style="text-decoration:line-through;opacity:0.7">$1</span>')
+    .replace(/```([\s\S]*?)```/g,'<code style="background:var(--bg);padding:2px 6px;border-radius:3px;font-family:var(--mono)">$1</code>')
+    .replace(/\n/g,'<br>');
+  document.getElementById('preview').innerHTML = html;
+}
+
+function updateCharCount() {
+  const len = document.getElementById('message').value.length;
+  document.getElementById('charCount').textContent = len;
+  const pct = Math.min(len / 1000 * 100, 100);
+  const bar = document.getElementById('charBar');
+  bar.style.width = pct + '%';
+  bar.style.background = pct > 80 ? 'var(--danger)' : pct > 60 ? 'var(--warn)' : 'var(--accent)';
+}
+
+let templates = JSON.parse(localStorage.getItem('wa_templates') || '[]');
+let sentToday = 0;
+
+function renderTemplates() {
+  const list = document.getElementById('templateList');
+  const empty = document.getElementById('tplEmpty');
+  const count = templates.length;
+  document.getElementById('tplCount').textContent = count + ' saved';
+  document.getElementById('tplCountVal').textContent = count;
+
+  list.innerHTML = '';
+  if (count === 0) {
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  templates.forEach((tpl, i) => {
+    const card = document.createElement('div');
+    card.className = 'tpl-card';
+    card.innerHTML = `
+      <div class="tpl-card-name">
+        <span>${escHtml(tpl.name)}</span>
+        <div class="tpl-actions">
+          <button class="tpl-act-btn" onclick="loadTemplate(${i})" title="Load">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="5 12 19 12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+          <button class="tpl-act-btn del" onclick="deleteTemplate(${i})" title="Delete">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="tpl-card-preview">${escHtml(tpl.body.slice(0, 60))}${tpl.body.length > 60 ? '…' : ''}</div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function saveTemplate() {
+  const name = document.getElementById('tplName').value.trim();
+  const body = document.getElementById('message').value.trim();
+  if (!name) { showToast('Masukkan nama template', 'error'); return; }
+  if (!body) { showToast('Pesan tidak boleh kosong', 'error'); return; }
+  templates.unshift({ name, body });
+  localStorage.setItem('wa_templates', JSON.stringify(templates));
+  document.getElementById('tplName').value = '';
+  renderTemplates();
+  showToast('Template "' + name + '" tersimpan', 'success');
+}
+
+function loadTemplate(i) {
+  const tpl = templates[i];
+  document.getElementById('message').value = tpl.body;
+  updatePreview();
+  updateCharCount();
+  showToast('Template "' + tpl.name + '" dimuat', 'success');
+}
+
+function deleteTemplate(i) {
+  const name = templates[i].name;
+  templates.splice(i, 1);
+  localStorage.setItem('wa_templates', JSON.stringify(templates));
+  renderTemplates();
+  showToast('Template "' + name + '" dihapus', 'error');
+}
+
+function sendMessage() {
+  const code = document.getElementById('countryCode').value;
+  let phone = document.getElementById('phoneNumber').value.replace(/\D/g, '');
+  const fullMsg = buildMessageWithLink().trim();
+
+  if (!phone) { showToast('Masukkan nomor tujuan', 'error'); return; }
+  if (!fullMsg) { showToast('Pesan tidak boleh kosong', 'error'); return; }
+
+  if (phone.startsWith('0')) phone = phone.slice(1);
+
+  const fullPhone = code + phone;
+  const encoded = encodeURIComponent(fullMsg);
+  const url = `https://wa.me/${fullPhone}?text=${encoded}`;
+
+  window.open(url, '_blank', 'noopener');
+
+  fetch('/api/send', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+    },
+    body: JSON.stringify({
+      phone_number: fullPhone,
+      message: fullMsg,
+    }),
+  }).catch(() => {});
+
+  sentToday++;
+  document.getElementById('sentCount').textContent = sentToday;
+  showToast('Membuka WhatsApp...', 'success');
+}
+
+let toastTimer;
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = 'toast ' + type + ' show';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = 'toast ' + type, 2800);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+renderEmojis();
+renderTemplates();
+</script>
+</body>
+</html>
+

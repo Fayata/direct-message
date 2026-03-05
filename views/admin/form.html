@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelola Form — Admin</title>
+  <style>
+    :root {
+      --bg: #0e0f11;
+      --surface: #161719;
+      --surface2: #1e2023;
+      --border: #2a2d32;
+      --accent: #00e5a0;
+      --text: #e8eaed;
+      --text-muted: #9ca3af;
+      --danger: #ff5b6b;
+      --font: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); min-height: 100vh; font-family: var(--font); color: var(--text); }
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    header h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.04em; }
+    header a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+    }
+    header a:hover { color: var(--accent); border-color: var(--accent); background: rgba(0,229,160,0.08); }
+    .container { max-width: 900px; margin: 0 auto; padding: 24px 20px; }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-bottom: 20px;
+    }
+    .card h2 { font-size: 13px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 16px; }
+    label { display: block; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+    input[type="text"], input[type="number"], select {
+      width: 100%;
+      max-width: 400px;
+      padding: 10px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    .btn {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: var(--accent);
+      color: #000;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn:hover { background: #00ffb2; }
+    .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-danger { background: rgba(255,91,107,0.2); color: var(--danger); }
+    .btn-danger:hover { background: rgba(255,91,107,0.35); }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { font-weight: 600; color: var(--text-muted); font-size: 11px; text-transform: uppercase; }
+    tr:hover td { background: rgba(0,229,160,0.04); }
+    .actions { display: flex; gap: 8px; }
+    .empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 14px; }
+    .help { font-size: 11px; color: var(--text-muted); margin-top: -8px; margin-bottom: 12px; }
+    input[type="checkbox"] { width: auto; margin-right: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Kelola Form (Field)</h1>
+    <nav style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <a href="/admin">Data User</a>
+      <a href="/admin/form">Kelola Form</a>
+      <a href="/admin/export?format=xlsx" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download Excel</a>
+      <a href="/admin/export?format=pdf" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download PDF</a>
+      <a href="/admin/logout">Keluar</a>
+    </nav>
+  </header>
+  <div class="container">
+
+    {{if eq .Mode "list"}}
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <h2 style="margin:0;">Daftar field form (yang diisi user)</h2>
+        <a href="/admin/form/add" class="btn">+ Tambah Field</a>
+      </div>
+      {{if .Fields}}
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Label</th>
+            <th>Name (key)</th>
+            <th>Tipe</th>
+            <th>Wajib</th>
+            <th>Opsi (select)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range $i, $f := .Fields}}
+          <tr>
+            <td>{{add $i 1}}</td>
+            <td>{{$f.Label}}</td>
+            <td>{{$f.Name}}</td>
+            <td>{{$f.FieldType}}</td>
+            <td>{{if $f.Required}}Ya{{else}}Tidak{{end}}</td>
+            <td>{{$f.Options}}</td>
+            <td>
+              <div class="actions">
+                <a href="/admin/form/edit?id={{$f.ID}}" class="btn btn-ghost" style="padding:6px 12px;font-size:12px;">Edit</a>
+                <form method="post" action="/admin/form/delete?id={{$f.ID}}" style="display:inline;" onsubmit="return confirm('Hapus field ini?');">
+                  <button type="submit" class="btn btn-danger" style="padding:6px 12px;font-size:12px;">Hapus</button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      {{else}}
+      <div class="empty">Belum ada field. Klik "Tambah Field" untuk menambah field yang akan diisi user.</div>
+      {{end}}
+      <p style="margin-top:16px;font-size:12px;color:var(--text-muted);">Link form yang dibagikan ke user: <strong id="formUrl"></strong></p>
+    </div>
+    {{end}}
+
+    {{if eq .Mode "add"}}
+    <div class="card">
+      <h2>Tambah Field Baru</h2>
+      <form method="post" action="/admin/form/add">
+        <label for="label">Label (tampilan di form)</label>
+        <input type="text" id="label" name="label" placeholder="Contoh: Nama Lengkap" required>
+        <label for="name">Name (key, huruf kecil, tanpa spasi)</label>
+        <input type="text" id="name" name="name" placeholder="Contoh: name atau email" required>
+        <p class="help">Digunakan sebagai nama input dan key di database. Contoh: name, address, gender</p>
+        <label for="field_type">Tipe field</label>
+        <select id="field_type" name="field_type" required>
+          <option value="text">Text</option>
+          <option value="textarea">Textarea</option>
+          <option value="select">Select (dropdown)</option>
+          <option value="date">Tanggal</option>
+          <option value="number">Angka</option>
+        </select>
+        <label><input type="checkbox" name="required" value="1" checked> Wajib diisi</label>
+        <label for="options">Opsi (hanya untuk tipe Select, pisahkan dengan koma)</label>
+        <input type="text" id="options" name="options" placeholder="Contoh: Laki-laki, Perempuan">
+        <div style="margin-top:16px;">
+          <button type="submit" class="btn">Simpan Field</button>
+          <a href="/admin/form" class="btn btn-ghost" style="margin-left:8px;">Batal</a>
+        </div>
+      </form>
+    </div>
+    {{end}}
+
+    {{if eq .Mode "edit"}}
+    <div class="card">
+      <h2>Edit Field</h2>
+      <form method="post" action="/admin/form/edit?id={{.EditField.ID}}">
+        <label for="label">Label (tampilan di form)</label>
+        <input type="text" id="label" name="label" value="{{.EditField.Label}}" required>
+        <label for="name">Name (key)</label>
+        <input type="text" id="name" name="name" value="{{.EditField.Name}}" required>
+        <label for="field_type">Tipe field</label>
+        <select id="field_type" name="field_type" required>
+          <option value="text" {{if eq .EditField.FieldType "text"}}selected{{end}}>Text</option>
+          <option value="textarea" {{if eq .EditField.FieldType "textarea"}}selected{{end}}>Textarea</option>
+          <option value="select" {{if eq .EditField.FieldType "select"}}selected{{end}}>Select</option>
+          <option value="date" {{if eq .EditField.FieldType "date"}}selected{{end}}>Tanggal</option>
+          <option value="number" {{if eq .EditField.FieldType "number"}}selected{{end}}>Angka</option>
+        </select>
+        <label><input type="checkbox" name="required" value="1" {{if .EditField.Required}}checked{{end}}> Wajib diisi</label>
+        <label for="options">Opsi (untuk Select)</label>
+        <input type="text" id="options" name="options" value="{{.EditField.Options}}" placeholder="Laki-laki, Perempuan">
+        <div style="margin-top:16px;">
+          <button type="submit" class="btn">Simpan Perubahan</button>
+          <a href="/admin/form" class="btn btn-ghost" style="margin-left:8px;">Batal</a>
+        </div>
+      </form>
+    </div>
+    {{end}}
+
+  </div>
+  <script>
+    var u = document.getElementById('formUrl');
+    if (u) u.textContent = window.location.origin + '/form';
+  </script>
+</body>
+</html>
