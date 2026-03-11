@@ -449,6 +449,8 @@
 
   .btn-sm { padding: 7px 12px; font-size: 12px; }
 
+  a.btn { text-decoration: none; }
+
   .send-panel .panel-body {
     gap: 12px;
   }
@@ -620,7 +622,16 @@
     </div>
     WA Sender
   </div>
-  <div class="header-badge"><span class="live-dot"></span> &nbsp;READY</div>
+  <div class="flex-row">
+    <a class="btn btn-ghost btn-sm" href="/admin/login" aria-label="Login Admin">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+      </svg>
+      Admin Login
+    </a>
+    <div class="header-badge"><span class="live-dot"></span> &nbsp;READY</div>
+  </div>
 </header>
 
 <div class="app">
