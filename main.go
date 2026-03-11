@@ -18,11 +18,11 @@ func main() {
 	http.HandleFunc("/admin/login", controllers.AdminLoginHandler)
 	http.HandleFunc("/admin/logout", controllers.AdminLogoutHandler)
 	http.HandleFunc("/admin/delete", controllers.RequireAdmin(controllers.AdminDeleteSubmissionHandler))
-	http.HandleFunc("/admin/form", controllers.RequireAdmin(controllers.AdminFormHandler))
+	http.HandleFunc("/admin/form/", controllers.RequireAdmin(controllers.AdminFormHandler))
 	http.HandleFunc("/admin/export", controllers.RequireAdmin(controllers.AdminExportHandler))
 	http.HandleFunc("/admin", controllers.RequireAdmin(controllers.AdminDashboardHandler))
 	http.HandleFunc("/admin/", controllers.RequireAdmin(controllers.AdminDashboardHandler))
 
-	fmt.Println("Server berjalan di http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	fmt.Println("Server berjalan di https://localhost:8080")
+	log.Fatal(http.ListenAndServeTLS(":8080", "cert.pem", "key.pem", nil))
 }
