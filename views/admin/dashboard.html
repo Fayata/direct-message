@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Admin — WA Sender</title>
   <link rel="stylesheet" href="/static/css/admin-dashboard.css">
+  <script src="/static/js/theme.js"></script>
 </head>
 <body>
   <header>
@@ -15,6 +16,8 @@
       <a href="/admin/export?format=xlsx" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download Excel</a>
       <a href="/admin/export?format=pdf" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download PDF</a>
       <a href="/admin/logout">Keluar</a>
+      <button id="themeToggle" type="button" onclick="toggleTheme()" style="border:none;border-radius:999px;padding:6px 12px;font-size:11px;cursor:pointer;background:transparent;color:var(--text-muted);border:1px solid var(--border);">
+      </button>
     </nav>
   </header>
   <div class="container">

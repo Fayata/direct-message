@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{if .FormTitle}}{{.FormTitle}}{{else}}Form Data Diri{{end}}</title>
   <link rel="stylesheet" href="/static/css/form.css">
+  <script src="/static/js/theme.js"></script>
 </head>
 <body>
   <div class="card">
@@ -13,9 +14,13 @@
         <div class="ch-title">{{if .FormTitle}}{{.FormTitle}}{{else}}Form Data Diri{{end}}</div>
         <div class="ch-sub">{{if .FormSubtitle}}{{.FormSubtitle}}{{else}}Silakan lengkapi data Anda.{{end}}</div>
       </div>
-      <div class="badge">
-        <span class="badge-dot"></span>
-        Aman & Rahasia
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div class="badge">
+          <span class="badge-dot"></span>
+          Aman & Rahasia
+        </div>
+        <button id="themeToggle" type="button" onclick="toggleTheme()" style="border:none;border-radius:999px;padding:4px 10px;font-size:11px;cursor:pointer;background:transparent;color:var(--text-muted);border:1px solid var(--border);">
+        </button>
       </div>
     </div>
 

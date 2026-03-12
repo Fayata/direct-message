@@ -1,6 +1,7 @@
 const THEME_KEY = 'wa_theme';
 
 function setTheme(theme) {
+  if (!document.body) return;
   document.body.dataset.theme = theme;
   const btn = document.getElementById('themeToggle');
   if (btn) {
@@ -9,11 +10,18 @@ function setTheme(theme) {
 }
 
 const storedTheme = localStorage.getItem(THEME_KEY) || 'dark';
-setTheme(storedTheme);
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => setTheme(storedTheme));
+} else {
+  setTheme(storedTheme);
+}
 
 function toggleTheme() {
-  const next = document.body.dataset.theme === 'light' ? 'dark' : 'light';
+  const current = document.body?.dataset.theme || storedTheme || 'dark';
+  const next = current === 'light' ? 'dark' : 'light';
   localStorage.setItem(THEME_KEY, next);
   setTheme(next);
 }
+
 
