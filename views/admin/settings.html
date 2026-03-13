@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Form Settings — Admin</title>
+  <link rel="stylesheet" href="/static/css/admin-settings.css">
+  <script src="/static/js/theme.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Form Settings</h1>
+    <nav style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <a href="/admin">Data User</a>
+      <a href="/admin/form">Kelola Form</a>
+      <a href="/admin/settings">Form Settings</a>
+      <a href="/admin/export?format=xlsx" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download Excel</a>
+      <a href="/admin/export?format=pdf" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download PDF</a>
+      <a href="/admin/logout">Keluar</a>
+      <button id="themeToggle" type="button" onclick="toggleTheme()" style="border:none;border-radius:999px;padding:6px 12px;font-size:11px;cursor:pointer;background:transparent;color:var(--text-muted);border:1px solid var(--border);"></button>
+    </nav>
+  </header>
+
+  <div class="container">
+    {{if .Saved}}
+    <div class="alert alert-success">Settings tersimpan.</div>
+    {{end}}
+
+    <div class="card">
+      <h2>Konten Form</h2>
+      <form method="post" action="/admin/settings">
+        <label for="form_title">Judul Form</label>
+        <input type="text" id="form_title" name="form_title" value="{{index .Settings "form_title"}}" required>
+
+        <label for="form_subtitle">Subtitle</label>
+        <input type="text" id="form_subtitle" name="form_subtitle" value="{{index .Settings "form_subtitle"}}">
+
+        <label for="form_success_message">Pesan Sukses</label>
+        <textarea id="form_success_message" name="form_success_message" rows="4">{{index .Settings "form_success_message"}}</textarea>
+
+        <label for="form_help_text">Help Text</label>
+        <textarea id="form_help_text" name="form_help_text" rows="3">{{index .Settings "form_help_text"}}</textarea>
+
+        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button type="submit" class="btn">Simpan</button>
+          <a class="btn btn-ghost" href="/form" target="_blank" rel="noopener">Preview Form</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
+

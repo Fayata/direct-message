@@ -301,6 +301,42 @@ func ListSubmissions(ctx context.Context) ([]Submission, error) {
 	return list, rows.Err()
 }
 
+func CountSubmissions(ctx context.Context) (int, error) {
+	var n int
+	err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM form_submissions`).Scan(&n)
+	return n, err
+}
+
+// ListSubmissionsPage mengembalikan subset submissions (pagination sederhana).
+// NOTE: filtering dilakukan di app layer (data JSON), jadi kita tetap baca data JSON.
+func ListSubmissionsPage(ctx context.Context, limit, offset int) ([]Submission, error) {
+	rows, err := db.QueryContext(ctx, `SELECT id, data, created_at FROM form_submissions ORDER BY created_at DESC LIMIT ? OFFSET ?`, limit, offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var list []Submission
+	for rows.Next() {
+		var s Submission
+		var dataStr, createdAt string
+		if err := rows.Scan(&s.ID, &dataStr, &createdAt); err != nil {
+			return nil, err
+		}
+		_ = json.Unmarshal([]byte(dataStr), &s.Data)
+		if s.Data == nil {
+			s.Data = make(map[string]string)
+		}
+		for _, layout := range []string{time.RFC3339, "2006-01-02 15:04:05"} {
+			if t, err := time.Parse(layout, createdAt); err == nil {
+				s.CreatedAt = t
+				break
+			}
+		}
+		list = append(list, s)
+	}
+	return list, rows.Err()
+}
+
 func DeleteSubmission(ctx context.Context, id int64) error {
 	_, err := db.ExecContext(ctx, `DELETE FROM form_submissions WHERE id = ?`, id)
 	return err

@@ -21,6 +21,8 @@ func main() {
 	http.HandleFunc("/admin/login", controllers.AdminLoginHandler)
 	http.HandleFunc("/admin/logout", controllers.AdminLogoutHandler)
 	http.HandleFunc("/admin/delete", controllers.RequireAdmin(controllers.AdminDeleteSubmissionHandler))
+	http.HandleFunc("/admin/bulk-delete", controllers.RequireAdmin(controllers.AdminBulkDeleteSubmissionsHandler))
+	http.HandleFunc("/admin/settings", controllers.RequireAdmin(controllers.AdminSettingsHandler))
 	http.HandleFunc("/admin/form/", controllers.RequireAdmin(controllers.AdminFormHandler))
 	http.HandleFunc("/admin/export", controllers.RequireAdmin(controllers.AdminExportHandler))
 	http.HandleFunc("/admin", controllers.RequireAdmin(controllers.AdminDashboardHandler))

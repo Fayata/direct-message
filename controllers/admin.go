@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gorilla/sessions"
@@ -20,6 +21,7 @@ var (
 	adminLogin     *template.Template
 	adminDashboard *template.Template
 	adminFormTmpl  *template.Template
+	adminSettings  *template.Template
 )
 
 func init() {
@@ -46,6 +48,7 @@ func init() {
 	adminFormTmpl = template.Must(template.New("form.html").Funcs(template.FuncMap{
 		"add": func(a, b int) int { return a + b },
 	}).ParseFiles(filepath.Join("views", "admin", "form.html")))
+	adminSettings = template.Must(template.ParseFiles(filepath.Join("views", "admin", "settings.html")))
 }
 
 func getAdminCreds() (user, pass string) {
@@ -137,15 +140,74 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		fields = []models.FormField{}
 	}
-	submissions, err := models.ListSubmissions(r.Context())
+
+	pageSize := 50
+	page := 1
+	if p, err := strconv.Atoi(r.URL.Query().Get("page")); err == nil && p > 0 {
+		page = p
+	}
+	q := strings.TrimSpace(r.URL.Query().Get("q"))
+	fieldKey := strings.TrimSpace(r.URL.Query().Get("field"))
+
+	// Total rows untuk pagination (tanpa filter q)
+	total, err := models.CountSubmissions(r.Context())
 	if err != nil {
-		log.Printf("ListSubmissions: %v", err)
+		log.Printf("CountSubmissions: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	maxPage := (total + pageSize - 1) / pageSize
+	if maxPage < 1 {
+		maxPage = 1
+	}
+	if page > maxPage {
+		page = maxPage
+	}
+	offset := (page - 1) * pageSize
+
+	submissions, err := models.ListSubmissionsPage(r.Context(), pageSize, offset)
+	if err != nil {
+		log.Printf("ListSubmissionsPage: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	// Filter sederhana di-memory (berlaku pada halaman saat ini).
+	if q != "" {
+		qq := strings.ToLower(q)
+		var filtered []models.Submission
+		for _, s := range submissions {
+			if fieldKey != "" {
+				if strings.Contains(strings.ToLower(s.Data[fieldKey]), qq) {
+					filtered = append(filtered, s)
+				}
+				continue
+			}
+			ok := false
+			for _, v := range s.Data {
+				if strings.Contains(strings.ToLower(v), qq) {
+					ok = true
+					break
+				}
+			}
+			if ok {
+				filtered = append(filtered, s)
+			}
+		}
+		submissions = filtered
+	}
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	if err := adminDashboard.Execute(w, map[string]any{"Fields": fields, "Submissions": submissions}); err != nil {
+	if err := adminDashboard.Execute(w, map[string]any{
+		"Fields":      fields,
+		"Submissions": submissions,
+		"Page":        page,
+		"MaxPage":     maxPage,
+		"PageSize":    pageSize,
+		"Total":       total,
+		"Q":           q,
+		"FieldKey":    fieldKey,
+	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
@@ -167,6 +229,63 @@ func AdminDeleteSubmissionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	http.Redirect(w, r, "/admin", http.StatusFound)
+}
+
+func AdminBulkDeleteSubmissionsHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	ids := r.Form["ids"]
+	for _, idStr := range ids {
+		id, err := strconv.ParseInt(idStr, 10, 64)
+		if err != nil || id <= 0 {
+			continue
+		}
+		_ = models.DeleteSubmission(r.Context(), id)
+	}
+	http.Redirect(w, r, "/admin", http.StatusFound)
+}
+
+func AdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
+	settings, _ := models.GetFormSettings(r.Context())
+	if settings == nil {
+		settings = make(map[string]string)
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		_ = adminSettings.Execute(w, map[string]any{
+			"Settings": settings,
+			"Saved":    r.URL.Query().Get("saved") == "1",
+		})
+	case http.MethodPost:
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		updates := map[string]string{
+			"form_title":           r.FormValue("form_title"),
+			"form_subtitle":        r.FormValue("form_subtitle"),
+			"form_success_message": r.FormValue("form_success_message"),
+			"form_help_text":       r.FormValue("form_help_text"),
+		}
+		for k, v := range updates {
+			if err := models.SetFormSetting(r.Context(), k, v); err != nil {
+				log.Printf("SetFormSetting %s: %v", k, err)
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		}
+		http.Redirect(w, r, "/admin/settings?saved=1", http.StatusFound)
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
 }
 
 func AdminFormHandler(w http.ResponseWriter, r *http.Request) {
