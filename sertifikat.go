@@ -40,15 +40,29 @@ func generateCertificate() {
 	}
 
 	// 4. Simpan sertifikat ke file cert.pem
-	certOut, _ := os.Create("cert.pem")
-	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-	certOut.Close()
+	certOut, err := os.Create("cert.pem")
+	if err != nil {
+		log.Fatalf("Gagal membuat file cert.pem: %v", err)
+	}
+	defer certOut.Close()
+	if err := pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: derBytes}); err != nil {
+		log.Fatalf("Gagal menulis cert.pem: %v", err)
+	}
 	log.Println("File cert.pem berhasil dibuat.")
 
 	// 5. Simpan private key ke file key.pem
-	keyOut, _ := os.Create("key.pem")
-	privBytes, _ := x509.MarshalPKCS8PrivateKey(priv)
-	pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
-	keyOut.Close()
+	keyOut, err := os.Create("key.pem")
+	if err != nil {
+		log.Fatalf("Gagal membuat file key.pem: %v", err)
+	}
+	defer keyOut.Close()
+
+	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		log.Fatalf("Gagal meng-encode private key: %v", err)
+	}
+	if err := pem.Encode(keyOut, &pem.Block{Type: "PRIVATE KEY", Bytes: privBytes}); err != nil {
+		log.Fatalf("Gagal menulis key.pem: %v", err)
+	}
 	log.Println("File key.pem berhasil dibuat.")
 }

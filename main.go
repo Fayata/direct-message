@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"phising/controllers"
 )
@@ -29,5 +30,15 @@ func main() {
 	http.HandleFunc("/admin/", controllers.RequireAdmin(controllers.AdminDashboardHandler))
 
 	fmt.Println("Server berjalan di https://localhost:8080")
-	log.Fatal(http.ListenAndServeTLS(":8080", "cert.pem", "key.pem", nil))
+
+	certPath := "cert.pem"
+	keyPath := "key.pem"
+	_, certErr := os.Stat(certPath)
+	_, keyErr := os.Stat(keyPath)
+	if os.IsNotExist(certErr) || os.IsNotExist(keyErr) {
+		log.Printf("TLS cert/key belum ada (%v / %v). Membuat ulang...", certPath, keyPath)
+		generateCertificate()
+	}
+
+	log.Fatal(http.ListenAndServeTLS(":8080", certPath, keyPath, nil))
 }
