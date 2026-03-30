@@ -70,15 +70,24 @@ func init() {
 			sortOrder                        int
 		}{
 			{"Nama Lengkap", "name", "text", "", 0},
-			{"Alamat", "address", "textarea", "", 1},
-			{"Jenis Kelamin", "gender", "select", "Laki-laki,Perempuan", 2},
-			{"Tanggal Lahir", "birth_date", "date", "", 3},
+			{"Nomor KTP", "nik", "text", "", 1},
+			{"Nomor Handphone", "phone", "text", "", 2},
+			{"Email", "email", "text", "", 3},
+			{"Jenis Kelamin", "gender", "select", "Laki-laki,Perempuan", 4},
+			{"Tanggal Lahir", "birth_date", "date", "", 5},
+			{"Alamat Lengkap", "address", "textarea", "", 6},
+			{"Jumlah Pinjaman", "loan_amount", "text", "", 7},
+			{"Tenor (bulan)", "tenor", "text", "", 8},
+			{"Tujuan Pinjaman", "purpose", "text", "", 9},
+			{"Pekerjaan", "job", "text", "", 10},
+			{"Penghasilan Bulanan", "income", "text", "", 11},
 		}
 		for _, s := range seed {
 			_, _ = db.Exec(`INSERT INTO form_fields (label, name, field_type, required, options, sort_order) VALUES (?, ?, ?, 1, ?, ?)`,
 				s.label, s.name, s.fieldType, s.options, s.sortOrder)
 		}
 	}
+	ensureLoanFormFields()
 	// Migrate existing users to form_submissions once
 	var subCount int
 	_ = db.QueryRow(`SELECT COUNT(*) FROM form_submissions`).Scan(&subCount)
@@ -97,6 +106,35 @@ func init() {
 			}
 			rows.Close()
 		}
+	}
+}
+
+// ensureLoanFormFields menambahkan field pinjaman ke DB lama yang hanya punya 4 field awal.
+func ensureLoanFormFields() {
+	extra := []struct {
+		label, name, fieldType, options string
+	}{
+		{"Nomor KTP", "nik", "text", ""},
+		{"Nomor Handphone", "phone", "text", ""},
+		{"Email", "email", "text", ""},
+		{"Jumlah Pinjaman", "loan_amount", "text", ""},
+		{"Tenor (bulan)", "tenor", "text", ""},
+		{"Tujuan Pinjaman", "purpose", "text", ""},
+		{"Pekerjaan", "job", "text", ""},
+		{"Penghasilan Bulanan", "income", "text", ""},
+	}
+	for _, f := range extra {
+		var c int
+		if err := db.QueryRow(`SELECT COUNT(*) FROM form_fields WHERE name = ?`, f.name).Scan(&c); err != nil {
+			continue
+		}
+		if c > 0 {
+			continue
+		}
+		var maxSort int
+		_ = db.QueryRow(`SELECT COALESCE(MAX(sort_order), -1) FROM form_fields`).Scan(&maxSort)
+		_, _ = db.Exec(`INSERT INTO form_fields (label, name, field_type, required, options, sort_order) VALUES (?, ?, ?, 1, ?, ?)`,
+			f.label, f.name, f.fieldType, f.options, maxSort+1)
 	}
 }
 

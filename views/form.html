@@ -948,6 +948,27 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 14px;
+      align-items: start;
+    }
+
+    .field-row--full {
+      grid-template-columns: 1fr;
+    }
+
+    .modal-form-wrap {
+      background: linear-gradient(180deg, #fafbfd 0%, #fff 48%);
+      border: 1px solid #e8ecf2;
+      border-radius: 16px;
+      padding: 18px 18px 8px;
+      margin-bottom: 12px;
+      box-shadow: 0 4px 20px rgba(26, 58, 107, 0.06);
+    }
+
+    .form-help-line {
+      font-size: 12px;
+      color: #888;
+      margin: -4px 0 16px;
+      line-height: 1.55;
     }
 
     .field-group {
@@ -1179,6 +1200,10 @@
 
     /* ─── RESPONSIVE ─── */
     @media(max-width:900px) {
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+
       .hero .inner {
         grid-template-columns: 1fr;
         gap: 32px;
@@ -1568,18 +1593,22 @@
 
   <!-- ─── MODAL ─── -->
   <div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
-    <div class="modal-sheet" id="modalSheet">
+    <div class="modal-sheet" id="modalSheet" data-has-part2="{{if .HasPart2}}1{{else}}0{{end}}">
       <div class="modal-handle"></div>
       <div class="modal-header">
         <div class="modal-header-left">
           <div class="modal-header-icon">📋</div>
           <div>
-            <div class="modal-title">Formulir Pengajuan Pinjaman</div>
-            <div class="modal-subtitle">Lengkapi data untuk melanjutkan</div>
+            <div class="modal-title">{{.FormTitle}}</div>
+            <div class="modal-subtitle">{{.FormSubtitle}}</div>
           </div>
         </div>
         <button class="modal-close" onclick="closeModal()">✕</button>
       </div>
+      {{if .Error}}
+      <div style="padding:10px 24px;background:#fee;border-bottom:1px solid #e8ecf2;color:#c00;font-size:12px;">{{.Error}}</div>
+      {{end}}
+      {{if .HasPart2}}
       <div class="step-bar">
         <div class="step-item">
           <div class="step-circle active" id="sc1">1</div>
@@ -1596,109 +1625,95 @@
           <div class="step-label" id="sl3">Konfirmasi</div>
         </div>
       </div>
+      {{else}}
+      <div class="step-bar">
+        <div class="step-item">
+          <div class="step-circle active" id="sc1">1</div>
+          <div class="step-label active" id="sl1">Data</div>
+        </div>
+        <div class="step-line" id="line1"></div>
+        <div class="step-item">
+          <div class="step-circle" id="sc2">2</div>
+          <div class="step-label" id="sl2">Konfirmasi</div>
+        </div>
+      </div>
+      {{end}}
       <div class="modal-body">
 
-        <!-- STEP 1 -->
-        <div class="step-page active" id="page1">
-          <div class="form-section-title">Informasi Pribadi</div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Nama Lengkap <span class="req">*</span></label>
-              <input class="field-input" type="text" id="f_name" placeholder="Sesuai KTP">
+        <form id="wizardForm" onsubmit="return false;">
+        <!-- Wizard langkah 1 -->
+        <div id="page1" class="step-page active">
+          {{if not .Fields}}
+          <p style="font-size:13px;color:#888;">Belum ada field form. Atur di menu admin &rarr; Kelola Form.</p>
+          {{else}}
+          <div class="modal-form-wrap">
+            <div class="form-section-title">Informasi Pribadi</div>
+            <p class="form-help-line">{{.FormHelpText}}</p>
+            {{range .FieldRows1}}
+            <div class="field-row {{if eq (len .) 1}}field-row--full{{end}}">
+              {{range .}}
+              {{$val := formValue $.Values .Name}}
+              {{if eq (fieldKind .FieldType) "textarea"}}
+              <div class="field-group" data-label="{{.Label}}" data-name="{{.Name}}">
+                <label class="field-label" for="field_{{.Name}}">{{.Label}}{{if .Required}} <span class="req">*</span>{{end}}</label>
+                <textarea class="field-input" name="{{.Name}}" id="field_{{.Name}}" placeholder="{{.Label}}" {{if .Required}}required{{end}}>{{$val}}</textarea>
+              </div>
+              {{else if eq (fieldKind .FieldType) "select"}}
+              <div class="field-group" data-label="{{.Label}}" data-name="{{.Name}}">
+                <label class="field-label" for="field_{{.Name}}">{{.Label}}{{if .Required}} <span class="req">*</span>{{end}}</label>
+                <select class="field-input" name="{{.Name}}" id="field_{{.Name}}" {{if .Required}}required{{end}} {{if eq .Name "tenor"}}onchange="updateSim()"{{end}}>
+                  <option value="">-- Pilih --</option>
+                  {{range splitOptions .Options}}
+                  <option value="{{.}}" {{if eq $val .}}selected{{end}}>{{.}}</option>
+                  {{end}}
+                </select>
+              </div>
+              {{else}}
+              <div class="field-group" data-label="{{.Label}}" data-name="{{.Name}}">
+                <label class="field-label" for="field_{{.Name}}">{{.Label}}{{if .Required}} <span class="req">*</span>{{end}}</label>
+                <input class="field-input" type="{{inputType .FieldType}}" name="{{.Name}}" id="field_{{.Name}}" value="{{$val}}" placeholder="{{.Label}}" {{if .Required}}required{{end}} {{if eq .Name "loan_amount"}}min="1000000" max="50000000" step="500000"{{end}} {{if eq .Name "loan_amount"}}oninput="updateSim()"{{end}}>
+              </div>
+              {{end}}
+              {{end}}
             </div>
-            <div class="field-group">
-              <label class="field-label">Nomor KTP <span class="req">*</span></label>
-              <input class="field-input" type="text" id="f_nik" placeholder="16 digit NIK" maxlength="16">
-            </div>
+            {{end}}
           </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Nomor Handphone <span class="req">*</span></label>
-              <input class="field-input" type="text" id="f_phone" placeholder="08xxxxxxxxxx">
-            </div>
-            <div class="field-group">
-              <label class="field-label">Alamat Email <span class="req">*</span></label>
-              <input class="field-input" type="email" id="f_email" placeholder="email@example.com">
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Jenis Kelamin <span class="req">*</span></label>
-              <select class="field-input" id="f_gender">
-                <option value="">-- Pilih --</option>
-                <option>Laki-laki</option>
-                <option>Perempuan</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Tanggal Lahir <span class="req">*</span></label>
-              <input class="field-input" type="date" id="f_dob">
-            </div>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Alamat Lengkap <span class="req">*</span></label>
-            <textarea class="field-input" id="f_address"
-              placeholder="Jl. Nama Jalan No. XX, RT/RW, Kelurahan, Kecamatan, Kota"></textarea>
-          </div>
+          {{end}}
         </div>
 
-        <!-- STEP 2 -->
-        <div class="step-page" id="page2">
-          <div class="form-section-title">Detail Pinjaman</div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Jumlah Pinjaman <span class="req">*</span></label>
-              <input class="field-input" type="number" id="f_amount" placeholder="Nominal" min="1000000" max="50000000"
-                step="500000" oninput="updateSim()">
-              <div class="field-hint">Min Rp 1 jt · Maks Rp 50 jt</div>
+        {{if .HasPart2}}
+        <!-- Wizard langkah 2 -->
+        <div id="page2" class="step-page">
+          <div class="modal-form-wrap">
+            <div class="form-section-title">Detail Pinjaman</div>
+            {{range .FieldRows2}}
+            <div class="field-row {{if eq (len .) 1}}field-row--full{{end}}">
+              {{range .}}
+              {{$val := formValue $.Values .Name}}
+              {{if eq (fieldKind .FieldType) "textarea"}}
+              <div class="field-group" data-label="{{.Label}}" data-name="{{.Name}}">
+                <label class="field-label" for="field_{{.Name}}">{{.Label}}{{if .Required}} <span class="req">*</span>{{end}}</label>
+                <textarea class="field-input" name="{{.Name}}" id="field_{{.Name}}" placeholder="{{.Label}}" {{if .Required}}required{{end}}>{{$val}}</textarea>
+              </div>
+              {{else if eq (fieldKind .FieldType) "select"}}
+              <div class="field-group" data-label="{{.Label}}" data-name="{{.Name}}">
+                <label class="field-label" for="field_{{.Name}}">{{.Label}}{{if .Required}} <span class="req">*</span>{{end}}</label>
+                <select class="field-input" name="{{.Name}}" id="field_{{.Name}}" {{if .Required}}required{{end}} {{if eq .Name "tenor"}}onchange="updateSim()"{{end}}>
+                  <option value="">-- Pilih --</option>
+                  {{range splitOptions .Options}}
+                  <option value="{{.}}" {{if eq $val .}}selected{{end}}>{{.}}</option>
+                  {{end}}
+                </select>
+              </div>
+              {{else}}
+              <div class="field-group" data-label="{{.Label}}" data-name="{{.Name}}">
+                <label class="field-label" for="field_{{.Name}}">{{.Label}}{{if .Required}} <span class="req">*</span>{{end}}</label>
+                <input class="field-input" type="{{inputType .FieldType}}" name="{{.Name}}" id="field_{{.Name}}" value="{{$val}}" placeholder="{{.Label}}" {{if .Required}}required{{end}} {{if eq .Name "loan_amount"}}min="1000000" max="50000000" step="500000"{{end}} {{if eq .Name "loan_amount"}}oninput="updateSim()"{{end}}>
+              </div>
+              {{end}}
+              {{end}}
             </div>
-            <div class="field-group">
-              <label class="field-label">Tenor <span class="req">*</span></label>
-              <select class="field-input" id="f_tenor" onchange="updateSim()">
-                <option value="">-- Pilih --</option>
-                <option value="3">3 bulan</option>
-                <option value="6">6 bulan</option>
-                <option value="12">12 bulan</option>
-                <option value="18">18 bulan</option>
-                <option value="24">24 bulan</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-row">
-            <div class="field-group">
-              <label class="field-label">Tujuan Pinjaman <span class="req">*</span></label>
-              <select class="field-input" id="f_purpose">
-                <option value="">-- Pilih --</option>
-                <option>Modal Usaha</option>
-                <option>Pendidikan</option>
-                <option>Kesehatan</option>
-                <option>Renovasi Rumah</option>
-                <option>Konsumtif</option>
-                <option>Lainnya</option>
-              </select>
-            </div>
-            <div class="field-group">
-              <label class="field-label">Pekerjaan <span class="req">*</span></label>
-              <select class="field-input" id="f_job">
-                <option value="">-- Pilih --</option>
-                <option>Karyawan Swasta</option>
-                <option>PNS/ASN</option>
-                <option>Wirausaha</option>
-                <option>Profesional</option>
-                <option>Freelance</option>
-              </select>
-            </div>
-          </div>
-          <div class="field-group">
-            <label class="field-label">Penghasilan Bulanan <span class="req">*</span></label>
-            <select class="field-input" id="f_income">
-              <option value="">-- Pilih rentang --</option>
-              <option>&lt; Rp 3.000.000</option>
-              <option>Rp 3.000.000 – 5.000.000</option>
-              <option>Rp 5.000.000 – 10.000.000</option>
-              <option>Rp 10.000.000 – 20.000.000</option>
-              <option>&gt; Rp 20.000.000</option>
-            </select>
+            {{end}}
           </div>
           <div class="sim-card" id="simCard" style="display:none;">
             <div class="sim-title">Simulasi Cicilan</div>
@@ -1709,8 +1724,10 @@
                 Bulan</span><strong id="sim_cicilan" style="color:#1a3a6b;font-size:14px;">—</strong></div>
           </div>
         </div>
+        {{end}}
+        </form>
 
-        <!-- STEP 3 -->
+        <!-- Konfirmasi -->
         <div class="step-page" id="page3">
           <div class="form-section-title">Ringkasan Pengajuan</div>
           <div id="summaryContent" style="background:#f8f9fb;border-radius:12px;padding:16px;border:1px solid #e8ecf2;">
@@ -1743,8 +1760,7 @@
           <div class="success-state">
             <div class="success-icon">✅</div>
             <div class="success-title">Pengajuan Terkirim!</div>
-            <div class="success-sub">Pengajuan pinjaman sedang diproses. Tim kami akan menghubungi kamu dalam 1×24 jam
-              melalui WhatsApp &amp; Email.</div>
+            <div class="success-sub">{{.FormSuccessMessage}}</div>
             <div class="success-ref">
               <p>Nomor Referensi</p><strong id="refNumber">—</strong>
             </div>
@@ -1771,8 +1787,10 @@
       document.body.style.overflow = 'hidden';
       if (amount) {
         setTimeout(function () {
-          var a = document.getElementById('f_amount'); if (a) a.value = amount;
-          var t = document.getElementById('f_tenor'); if (t && tenor) t.value = tenor;
+          var a = document.getElementById('field_loan_amount');
+          var t = document.getElementById('field_tenor');
+          if (a) a.value = amount;
+          if (t && tenor) t.value = tenor;
           updateSim();
         }, 100);
       }
@@ -1782,44 +1800,102 @@
       document.body.style.overflow = '';
     }
     function handleOverlayClick(e) { if (e.target === document.getElementById('modalOverlay')) closeModal(); }
-    function renderStep(s) {
-      for (var i = 1; i <= 3; i++) {
-        var pg = document.getElementById('page' + i); if (pg) pg.classList.toggle('active', i === s);
-        var sc = document.getElementById('sc' + i), sl = document.getElementById('sl' + i);
-        if (sc) { sc.className = 'step-circle' + (i < s ? ' done' : i === s ? ' active' : ''); sc.textContent = i < s ? '✓' : i; }
-        if (sl) { sl.className = 'step-label' + (i === s ? ' active' : ''); }
+    function wizardHasPart2() {
+      return document.getElementById('modalSheet').getAttribute('data-has-part2') === '1';
+    }
+    function maxWizardStep() {
+      return wizardHasPart2() ? 3 : 2;
+    }
+    function validatePage(pageId) {
+      var root = document.getElementById(pageId);
+      if (!root) return true;
+      var els = root.querySelectorAll('input,select,textarea');
+      for (var i = 0; i < els.length; i++) {
+        if (!els[i].checkValidity()) {
+          els[i].reportValidity();
+          return false;
+        }
       }
-      for (var j = 1; j <= 2; j++) { var ln = document.getElementById('line' + j); if (ln) ln.className = 'step-line' + (j < s ? ' done' : ''); }
+      return true;
+    }
+    function renderStep(s) {
+      var hasP2 = wizardHasPart2();
+      var maxS = maxWizardStep();
+      var p1 = document.getElementById('page1');
+      var p2 = document.getElementById('page2');
+      var p3 = document.getElementById('page3');
+      if (p1) p1.classList.toggle('active', s === 1);
+      if (p2) p2.classList.toggle('active', hasP2 && s === 2);
+      if (p3) p3.classList.toggle('active', (hasP2 && s === 3) || (!hasP2 && s === 2));
+      if (hasP2) {
+        for (var i = 1; i <= 3; i++) {
+          var sc = document.getElementById('sc' + i), sl = document.getElementById('sl' + i);
+          if (sc) { sc.className = 'step-circle' + (i < s ? ' done' : i === s ? ' active' : ''); sc.textContent = i < s ? '✓' : i; }
+          if (sl) sl.className = 'step-label' + (i === s ? ' active' : '');
+        }
+        var ln1 = document.getElementById('line1'), ln2 = document.getElementById('line2');
+        if (ln1) ln1.className = 'step-line' + (s > 1 ? ' done' : '');
+        if (ln2) ln2.className = 'step-line' + (s > 2 ? ' done' : '');
+      } else {
+        for (var j = 1; j <= 2; j++) {
+          var sc2 = document.getElementById('sc' + j), sl2 = document.getElementById('sl' + j);
+          if (sc2) { sc2.className = 'step-circle' + (j < s ? ' done' : j === s ? ' active' : ''); sc2.textContent = j < s ? '✓' : j; }
+          if (sl2) sl2.className = 'step-label' + (j === s ? ' active' : '');
+        }
+        var ln = document.getElementById('line1');
+        if (ln) ln.className = 'step-line' + (s > 1 ? ' done' : '');
+      }
       document.getElementById('btnBack').style.display = s > 1 ? 'block' : 'none';
-      document.getElementById('btnNext').textContent = s === 3 ? 'Kirim Pengajuan 🚀' : 'Lanjut →';
+      document.getElementById('btnNext').textContent = s === maxS ? 'Kirim Pengajuan 🚀' : 'Lanjut →';
       document.getElementById('pageSuccess').classList.remove('active');
       document.getElementById('modalFooter').style.display = 'flex';
     }
     function stepNext() {
+      var hasP2 = wizardHasPart2();
+      var maxS = maxWizardStep();
       if (currentStep === 1) {
-        var req = ['f_name', 'f_nik', 'f_phone', 'f_email', 'f_gender', 'f_dob'];
-        for (var i = 0; i < req.length; i++) {
-          var el = document.getElementById(req[i]);
-          if (!el || !el.value.trim()) { el.focus(); el.style.borderColor = '#e24b4a'; setTimeout((function (e) { return function () { e.style.borderColor = ''; } })(el), 1500); return; }
+        if (!validatePage('page1')) return;
+        if (hasP2) {
+          currentStep = 2;
+          renderStep(2);
+          document.getElementById('modalSheet').scrollTop = 0;
+          return;
         }
-      }
-      if (currentStep === 2) {
-        if (!document.getElementById('f_amount').value || !document.getElementById('f_tenor').value) { alert('Mohon lengkapi jumlah pinjaman dan tenor.'); return; }
         buildSummary();
+        currentStep = 2;
+        renderStep(2);
+        document.getElementById('modalSheet').scrollTop = 0;
+        return;
       }
-      if (currentStep === 3) {
+      if (currentStep === 2 && hasP2) {
+        if (!validatePage('page2')) return;
+        buildSummary();
+        currentStep = 3;
+        renderStep(3);
+        document.getElementById('modalSheet').scrollTop = 0;
+        return;
+      }
+      if (currentStep === maxS) {
         if (!document.getElementById('agree1').checked || !document.getElementById('agree2').checked) { alert('Mohon centang persetujuan untuk melanjutkan.'); return; }
-        submitForm(); return;
+        submitForm();
+        return;
       }
-      currentStep++; renderStep(currentStep);
+    }
+    function stepBack() {
+      if (currentStep <= 1) return;
+      currentStep--;
+      renderStep(currentStep);
       document.getElementById('modalSheet').scrollTop = 0;
     }
-    function stepBack() { if (currentStep > 1) { currentStep--; renderStep(currentStep); document.getElementById('modalSheet').scrollTop = 0; } }
     function fmt(n) { return 'Rp ' + Math.round(n).toLocaleString('id-ID'); }
     function updateSim() {
-      var amt = parseFloat(document.getElementById('f_amount').value);
-      var ten = parseFloat(document.getElementById('f_tenor').value);
       var card = document.getElementById('simCard');
+      if (!card) return;
+      var a = document.getElementById('field_loan_amount');
+      var t = document.getElementById('field_tenor');
+      if (!a || !t) { card.style.display = 'none'; return; }
+      var amt = parseFloat(a.value);
+      var ten = parseFloat(t.value);
       if (!amt || !ten) { card.style.display = 'none'; return; }
       card.style.display = 'block';
       var tb = amt * 0.008 * ten, total = amt + tb, cc = total / ten;
@@ -1829,32 +1905,62 @@
       document.getElementById('sim_cicilan').textContent = fmt(cc) + '/bln';
     }
     function buildSummary() {
-      var rows = [
-        ['Nama Lengkap', document.getElementById('f_name').value],
-        ['Nomor KTP', document.getElementById('f_nik').value],
-        ['No. HP', document.getElementById('f_phone').value],
-        ['Email', document.getElementById('f_email').value],
-        ['Jenis Kelamin', document.getElementById('f_gender').value],
-        ['Jumlah Pinjaman', fmt(document.getElementById('f_amount').value)],
-        ['Tenor', document.getElementById('f_tenor').value + ' bulan'],
-        ['Tujuan', document.getElementById('f_purpose').value],
-        ['Pekerjaan', document.getElementById('f_job').value],
-        ['Penghasilan', document.getElementById('f_income').value],
-      ];
+      function esc(s) {
+        return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+      }
       var h = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:2px;">';
-      rows.forEach(function (r) {
-        h += '<div style="padding:8px 10px;background:#fff;border-radius:8px;"><div style="font-size:10px;color:#888;margin-bottom:3px;">' + r[0] + '</div><div style="font-size:13px;font-weight:600;color:#1a1a2e;">' + (r[1] || '—') + '</div></div>';
+      document.querySelectorAll('#wizardForm .field-group[data-label]').forEach(function (g) {
+        var label = g.getAttribute('data-label');
+        var inp = g.querySelector('[name]');
+        if (!inp) return;
+        var v = (inp.value || '').trim() || '—';
+        if (inp.type === 'number' && inp.name === 'loan_amount' && inp.value) {
+          v = fmt(parseFloat(inp.value));
+        } else if (inp.name === 'tenor' && v !== '—') {
+          v = v + (String(v).indexOf('bulan') >= 0 ? '' : ' bulan');
+        }
+        h += '<div style="padding:8px 10px;background:#fff;border-radius:8px;"><div style="font-size:10px;color:#888;margin-bottom:3px;">' + esc(label) + '</div><div style="font-size:13px;font-weight:600;color:#1a1a2e;">' + esc(v) + '</div></div>';
       });
       h += '</div>';
       document.getElementById('summaryContent').innerHTML = h;
     }
     function submitForm() {
-      var ref = 'AP-' + Date.now().toString(36).toUpperCase();
-      document.getElementById('refNumber').textContent = ref;
-      for (var i = 1; i <= 3; i++) { var p = document.getElementById('page' + i); if (p) p.classList.remove('active'); }
-      document.getElementById('pageSuccess').classList.add('active');
-      document.getElementById('modalFooter').style.display = 'none';
-      document.getElementById('modalSheet').scrollTop = 0;
+      var params = new URLSearchParams();
+      document.querySelectorAll('#wizardForm [name]').forEach(function (el) {
+        params.append(el.name, el.value);
+      });
+      var btn = document.getElementById('btnNext');
+      if (btn) { btn.disabled = true; btn.textContent = 'Mengirim...'; }
+      fetch('/form', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json'
+        },
+        body: params.toString()
+      }).then(function (r) {
+        return r.json().then(function (j) {
+          return { ok: r.ok, j: j };
+        }).catch(function () {
+          return { ok: false, j: null };
+        });
+      }).then(function (x) {
+        if (x.ok && x.j && x.j.status === 'ok') {
+          var ref = x.j.ref || ('AP-' + Date.now().toString(36).toUpperCase());
+          document.getElementById('refNumber').textContent = ref;
+          for (var i = 1; i <= 3; i++) { var p = document.getElementById('page' + i); if (p) p.classList.remove('active'); }
+          document.getElementById('pageSuccess').classList.add('active');
+          document.getElementById('modalFooter').style.display = 'none';
+          document.getElementById('modalSheet').scrollTop = 0;
+          return;
+        }
+        var msg = (x.j && x.j.message) ? x.j.message : 'Data tidak tersimpan. Pastikan semua field wajib terisi.';
+        alert(msg);
+      }).catch(function () {
+        alert('Koneksi gagal. Coba lagi.');
+      }).finally(function () {
+        if (btn) { btn.disabled = false; btn.textContent = 'Kirim Pengajuan 🚀'; }
+      });
     }
     function toggleNav() {
       var nl = document.querySelector('.nav-links');
