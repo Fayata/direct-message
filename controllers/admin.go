@@ -314,13 +314,25 @@ func adminFormList(w http.ResponseWriter, r *http.Request) {
 		fields = []models.FormField{}
 	}
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-	_ = adminFormTmpl.Execute(w, map[string]any{"Fields": fields, "EditField": nil, "Mode": "list"})
+	_ = adminFormTmpl.Execute(w, map[string]any{
+		"Fields":          fields,
+		"EditField":       nil,
+		"Mode":            "list",
+		"FormAdminPath":   "/admin/form",
+		"FormPagePath":    "/form",
+	})
 }
 
 func adminFormAdd(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = adminFormTmpl.Execute(w, map[string]any{"Fields": nil, "EditField": nil, "Mode": "add"})
+		_ = adminFormTmpl.Execute(w, map[string]any{
+			"Fields":        nil,
+			"EditField":     nil,
+			"Mode":          "add",
+			"FormAdminPath": "/admin/form",
+			"FormPagePath":  "/form",
+		})
 		return
 	}
 	if r.Method != http.MethodPost {
@@ -367,7 +379,13 @@ func adminFormEdit(w http.ResponseWriter, r *http.Request) {
 		}
 		fields, _ := models.ListFormFields(r.Context())
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
-		_ = adminFormTmpl.Execute(w, map[string]any{"Fields": fields, "EditField": f, "Mode": "edit"})
+		_ = adminFormTmpl.Execute(w, map[string]any{
+			"Fields":          fields,
+			"EditField":       f,
+			"Mode":            "edit",
+			"FormAdminPath":   "/admin/form",
+			"FormPagePath":    "/form",
+		})
 		return
 	}
 	if r.Method != http.MethodPost {

@@ -30,8 +30,8 @@
 
     {{if eq .Mode "list"}}
     <div style="margin-bottom:14px;">
-      <a href="/admin/form/add" class="btn" style="display:inline-block;text-decoration:none;">+ Tambah field</a>
-      <a href="/form" target="_blank" rel="noopener" style="margin-left:10px;font-size:13px;color:var(--accent);">Preview /form →</a>
+      <a href="{{.FormAdminPath}}/add" class="btn" style="display:inline-block;text-decoration:none;">+ Tambah field</a>
+      <a href="{{.FormPagePath}}" target="_blank" rel="noopener" style="margin-left:10px;font-size:13px;color:var(--accent);">Preview {{.FormPagePath}} →</a>
     </div>
     <div class="card">
       <div class="card-header">Daftar field</div>
@@ -57,8 +57,8 @@
               <td>{{.FieldType}}</td>
               <td>{{if .Required}}Ya{{else}}Tidak{{end}}</td>
               <td style="white-space:nowrap;">
-                <a href="/admin/form/edit?id={{.ID}}" style="font-size:12px;margin-right:8px;">Edit</a>
-                <form method="post" action="/admin/form/delete?id={{.ID}}" style="display:inline;" onsubmit="return confirm('Hapus field ini?');">
+                <a href="{{$.FormAdminPath}}/edit?id={{.ID}}" style="font-size:12px;margin-right:8px;">Edit</a>
+                <form method="post" action="{{$.FormAdminPath}}/delete?id={{.ID}}" style="display:inline;" onsubmit="return confirm('Hapus field ini?');">
                   <button type="submit" class="btn-del">Hapus</button>
                 </form>
               </td>
@@ -76,7 +76,7 @@
     {{if eq .Mode "add"}}
     <div class="card">
       <div class="card-header">Field baru</div>
-      <form method="post" action="/admin/form/add" style="max-width:520px;">
+      <form method="post" action="{{.FormAdminPath}}/add" style="max-width:520px;">
         <label for="label">Label (tampil ke user)</label>
         <input type="text" id="label" name="label" required>
 
@@ -103,7 +103,7 @@
 
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <button type="submit" class="btn">Simpan</button>
-          <a href="/admin/form" class="btn btn-ghost">Batal</a>
+          <a href="{{.FormAdminPath}}" class="btn btn-ghost">Batal</a>
         </div>
       </form>
     </div>
@@ -113,7 +113,7 @@
     {{with .EditField}}
     <div class="card">
       <div class="card-header">Edit field</div>
-      <form method="post" action="/admin/form/edit?id={{.ID}}" style="max-width:520px;">
+      <form method="post" action="{{$.FormAdminPath}}/edit?id={{.ID}}" style="max-width:520px;">
         <label for="label">Label</label>
         <input type="text" id="label" name="label" value="{{.Label}}" required>
 
@@ -140,7 +140,7 @@
 
         <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
           <button type="submit" class="btn">Simpan</button>
-          <a href="/admin/form" class="btn btn-ghost">Batal</a>
+          <a href="{{$.FormAdminPath}}" class="btn btn-ghost">Batal</a>
         </div>
       </form>
     </div>

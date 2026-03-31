@@ -18,6 +18,7 @@ func main() {
 	http.HandleFunc("/api/templates/save", controllers.SaveTemplateHandler)
 	http.HandleFunc("/api/send", controllers.SendMessageHandler)
 	http.HandleFunc("/form", controllers.FormHandler)
+	http.HandleFunc("/form2", controllers.Form2Handler)
 
 	http.HandleFunc("/admin/login", controllers.AdminLoginHandler)
 	http.HandleFunc("/admin/logout", controllers.AdminLogoutHandler)
@@ -25,6 +26,8 @@ func main() {
 	http.HandleFunc("/admin/bulk-delete", controllers.RequireAdmin(controllers.AdminBulkDeleteSubmissionsHandler))
 	http.HandleFunc("/admin/settings", controllers.RequireAdmin(controllers.AdminSettingsHandler))
 	http.HandleFunc("/admin/form/", controllers.RequireAdmin(controllers.AdminFormHandler))
+	http.HandleFunc("/admin/form2/", controllers.RequireAdmin(controllers.AdminForm2Handler))
+	http.HandleFunc("/admin/form2", controllers.RequireAdmin(controllers.AdminForm2Handler))
 	http.HandleFunc("/admin/export", controllers.RequireAdmin(controllers.AdminExportHandler))
 	http.HandleFunc("/admin", controllers.RequireAdmin(controllers.AdminDashboardHandler))
 	http.HandleFunc("/admin/", controllers.RequireAdmin(controllers.AdminDashboardHandler))

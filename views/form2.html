@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AwanGold - Beli Emas Realtime</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Inter, sans-serif;
+      background: #0b0e11;
+      color: #eaecef;
+    }
+
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 0 20px;
+    }
+
+    .top {
+      border-bottom: 1px solid #1e2329;
+      background: #11161c;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .top .in {
+      height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      font-weight: 800;
+      letter-spacing: -0.4px;
+      color: #fcd535;
+      text-decoration: none;
+      font-size: 22px;
+    }
+
+    .nav a {
+      color: #b7bdc6;
+      text-decoration: none;
+      margin-left: 16px;
+      font-size: 13px;
+    }
+
+    .hero {
+      padding: 56px 0 40px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .headline {
+      font-size: 40px;
+      line-height: 1.16;
+      font-weight: 800;
+      margin-bottom: 10px;
+      color: #fff;
+    }
+
+    .headline span {
+      color: #fcd535;
+    }
+
+    .sub {
+      color: #9ea7b3;
+      line-height: 1.6;
+      margin-bottom: 20px;
+      font-size: 15px;
+      max-width: 620px;
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      background: rgba(252, 213, 53, 0.12);
+      border: 1px solid rgba(252, 213, 53, 0.35);
+      color: #fcd535;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 14px;
+    }
+
+    .benefits {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .benefit {
+      background: #141a22;
+      border: 1px solid #252d37;
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 12px;
+      color: #b7bdc6;
+    }
+
+    .benefit strong {
+      display: block;
+      color: #fff;
+      margin-bottom: 4px;
+      font-size: 13px;
+    }
+
+    .trade {
+      background: linear-gradient(180deg, #151b23 0%, #0f1319 100%);
+      border: 1px solid #252d37;
+      border-radius: 16px;
+      padding: 18px;
+      box-shadow: 0 18px 44px rgba(0, 0, 0, 0.35);
+    }
+
+    .trade-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .trade-head h3 {
+      color: #fff;
+      font-size: 16px;
+    }
+
+    .live {
+      color: #0ecb81;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .price-main {
+      font-size: 34px;
+      font-weight: 800;
+      color: #fcd535;
+      margin: 8px 0 2px;
+    }
+
+    .price-caption {
+      color: #8b96a5;
+      font-size: 12px;
+    }
+
+    .slider-box {
+      margin: 16px 0 8px;
+      background: #11161c;
+      border: 1px solid #252d37;
+      border-radius: 12px;
+      padding: 14px;
+    }
+
+    .slider-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #9ea7b3;
+      margin-bottom: 8px;
+    }
+
+    #gramsValue {
+      color: #fff;
+      font-weight: 700;
+    }
+
+    #weightSlider {
+      width: 100%;
+      accent-color: #fcd535;
+    }
+
+    .quick {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .quick button {
+      background: #1a2028;
+      color: #dbe1e8;
+      border: 1px solid #2b3542;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .quick button:hover {
+      border-color: #fcd535;
+      color: #fcd535;
+    }
+
+    .totals {
+      margin-top: 12px;
+      background: #11161c;
+      border: 1px solid #252d37;
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .totals .r {
+      display: flex;
+      justify-content: space-between;
+      padding: 5px 0;
+      font-size: 13px;
+      color: #b7bdc6;
+    }
+
+    .totals .r strong {
+      color: #fff;
+    }
+
+    .totals .r.total {
+      border-top: 1px dashed #2b3542;
+      margin-top: 6px;
+      padding-top: 10px;
+      font-size: 15px;
+    }
+
+    .cta {
+      width: 100%;
+      margin-top: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #fcd535;
+      color: #161a1e;
+      font-weight: 800;
+      font-size: 14px;
+      padding: 12px;
+      cursor: pointer;
+    }
+
+    .cta:hover {
+      opacity: 0.92;
+    }
+
+    .footer-note {
+      margin-top: 10px;
+      color: #8b96a5;
+      font-size: 11px;
+      text-align: center;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.62);
+      z-index: 40;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-sheet {
+      width: 100%;
+      max-width: 640px;
+      background: #fff;
+      color: #1a1a2e;
+      border-radius: 18px;
+      overflow: hidden;
+      max-height: 92vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-header {
+      padding: 16px 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #e8ecf2;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 800;
+    }
+
+    .modal-subtitle {
+      font-size: 12px;
+      color: #7a8796;
+      margin-top: 2px;
+    }
+
+    .close {
+      border: 1px solid #dde2ea;
+      background: #f8f9fb;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    .step {
+      padding: 10px 18px;
+      background: #fafbfc;
+      border-bottom: 1px solid #e8ecf2;
+      font-size: 12px;
+      color: #5f6b7a;
+    }
+
+    .body {
+      padding: 14px 18px 18px;
+      overflow: auto;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .g {
+      margin-bottom: 12px;
+    }
+
+    .g label {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #334154;
+    }
+
+    .g input,
+    .g select,
+    .g textarea {
+      width: 100%;
+      border: 1.5px solid #d8dee8;
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 13px;
+    }
+
+    .g textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    .g.full {
+      grid-column: 1 / -1;
+    }
+
+    .summary {
+      background: #f7f9fc;
+      border: 1px solid #e2e8f1;
+      border-radius: 10px;
+      padding: 10px;
+      margin-bottom: 12px;
+      font-size: 12px;
+      color: #4a5665;
+    }
+
+    .agree {
+      background: #f8f9fb;
+      border: 1px solid #e7ebf2;
+      border-radius: 10px;
+      padding: 10px;
+      font-size: 12px;
+      color: #4f5d6d;
+      margin-bottom: 10px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      padding: 12px 18px 16px;
+      border-top: 1px solid #e8ecf2;
+    }
+
+    .btn {
+      flex: 1;
+      border-radius: 10px;
+      padding: 11px;
+      border: 1px solid #d6dde8;
+      background: #fff;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .btn.primary {
+      flex: 1.5;
+      border: none;
+      background: #fcd535;
+      color: #191d22;
+    }
+
+    .success {
+      text-align: center;
+      padding: 36px 18px;
+    }
+
+    .success h3 {
+      margin-bottom: 8px;
+    }
+
+    .success p {
+      color: #6d7888;
+      font-size: 13px;
+    }
+
+    @media (max-width: 900px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .benefits {
+        grid-template-columns: 1fr;
+      }
+
+      .headline {
+        font-size: 32px;
+      }
+    }
+
+    @media (max-width: 620px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <header class="top">
+    <div class="wrap in">
+      <a class="logo" href="/form2">AwanGold</a>
+      <nav class="nav">
+        <a href="#harga">Harga Realtime</a>
+        <a href="#beli">Beli Emas</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero wrap">
+    <div class="hero-grid">
+      <div>
+        <div class="pill">AwanGold Live Market</div>
+        <h1 class="headline">Beli Emas Digital <span>Realtime</span><br>Gratis Cetak + Gratis Ongkir</h1>
+        <p class="sub">Harga update realtime, transparan, tanpa biaya PPN tambahan. Cetak fisik emas gratis ongkir ke
+          seluruh kota Indonesia mulai pembelian 5 gram.</p>
+        <div class="benefits">
+          <div class="benefit"><strong>Harga Realtime</strong>Sinkron dari market internasional dan dikonversi ke IDR
+            otomatis.</div>
+          <div class="benefit"><strong>Free PPN</strong>Harga yang ditampilkan sudah final untuk pembelian digital.
+          </div>
+          <div class="benefit"><strong>Cetak Gratis</strong>Mulai 5 gram, kirim ke seluruh kota tanpa ongkir.</div>
+        </div>
+      </div>
+      <div id="beli" class="trade">
+        <div class="trade-head">
+          <h3>Beli Emas Instan</h3>
+          <span class="live" id="liveStatus">LIVE</span>
+        </div>
+        <div class="price-main" id="pricePerGram">Rp 0</div>
+        <div class="price-caption">Harga emas per gram (update otomatis)</div>
+
+        <div class="slider-box">
+          <div class="slider-row">
+            <span>Pilih berat</span>
+            <span id="gramsValue">1 gram</span>
+          </div>
+          <input id="weightSlider" type="range" min="1" max="100" value="5">
+          <div class="quick">
+            <button type="button" onclick="setWeight(1)">1g</button>
+            <button type="button" onclick="setWeight(5)">5g</button>
+            <button type="button" onclick="setWeight(10)">10g</button>
+            <button type="button" onclick="setWeight(25)">25g</button>
+            <button type="button" onclick="setWeight(50)">50g</button>
+            <button type="button" onclick="setWeight(100)">100g</button>
+          </div>
+        </div>
+
+        <div class="totals" id="harga">
+          <div class="r"><span>Berat emas</span><strong id="sumWeight">5 gram</strong></div>
+          <div class="r"><span>Harga per gram</span><strong id="sumPriceGram">Rp 0</strong></div>
+          <div class="r"><span>PPN</span><strong>Sudah termasuk PPN</strong></div>
+          <div class="r"><span>Ongkir Cetak</span><strong id="sumShip">Gratis (>=5g)</strong></div>
+          <div class="r total"><span>Total Bayar</span><strong id="sumTotal">Rp 0</strong></div>
+        </div>
+
+        <button class="cta" onclick="openGoldForm()">Beli Emas</button>
+        <div class="footer-note">Harga berubah mengikuti market. Order dikunci saat submit formulir.</div>
+      </div>
+    </div>
+  </section>
+
+  <div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeGoldForm()">
+    <div class="modal-sheet">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">{{.FormTitle}}</div>
+          <div class="modal-subtitle">{{.FormSubtitle}}</div>
+        </div>
+        <button class="close" onclick="closeGoldForm()">x</button>
+      </div>
+      <div class="step" id="stepText">Langkah 1/2 - Isi data</div>
+      <div class="body">
+        <form id="wizardForm" onsubmit="return false;">
+          <div id="page1">
+            {{if .Error}}<div class="agree" style="border-color:#ffd0d0;background:#fff3f3;color:#b30000;">{{.Error}}
+            </div>{{end}}
+            {{if not .Fields}}
+            <p style="font-size:13px;color:#777;">Belum ada field Form 2. Atur dulu di admin > Kelola Form 2.</p>
+            {{else}}
+            {{range .FieldRows1}}
+            <div class="row">
+              {{range .}}
+              {{$val := formValue $.Values .Name}}
+              <div class="g {{if eq (fieldKind .FieldType) " textarea"}}full{{end}}" data-label="{{.Label}}">
+                <label for="field_{{.Name}}">{{.Label}}{{if .Required}} *{{end}}</label>
+                {{if eq (fieldKind .FieldType) "textarea"}}
+                <textarea id="field_{{.Name}}" name="{{.Name}}" {{if .Required}}required{{end}}>{{$val}}</textarea>
+                {{else if eq (fieldKind .FieldType) "select"}}
+                <select id="field_{{.Name}}" name="{{.Name}}" {{if .Required}}required{{end}}>
+                  <option value="">-- Pilih --</option>
+                  {{range splitOptions .Options}}<option value="{{.}}" {{if eq $val .}}selected{{end}}>{{.}}</option>
+                  {{end}}
+                </select>
+                {{else}}
+                <input id="field_{{.Name}}" type="{{inputType .FieldType}}" name="{{.Name}}" value="{{$val}}" {{if
+                  .Required}}required{{end}}>
+                {{end}}
+              </div>
+              {{end}}
+            </div>
+            {{end}}
+            {{end}}
+          </div>
+
+          <div id="page2" style="display:none;">
+            <div class="summary" id="summaryBox"></div>
+            <div class="agree"><input type="checkbox" id="agreeA"> Saya setuju data diproses untuk transaksi pembelian
+              emas.</div>
+            <div class="agree"><input type="checkbox" id="agreeB"> Saya paham harga bisa berubah mengikuti market sampai
+              order dikunci.</div>
+          </div>
+
+          <div id="successPage" class="success" style="display:none;">
+            <h3>Order Terkirim</h3>
+            <p>{{.FormSuccessMessage}}</p>
+            <p style="margin-top:8px;">Ref: <strong id="refNum">-</strong></p>
+          </div>
+        </form>
+      </div>
+      <div class="actions" id="actions">
+        <button class="btn" id="btnBack" onclick="stepBack()" style="display:none;">Kembali</button>
+        <button class="btn primary" id="btnNext" onclick="stepNext()">Lanjut</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    var state = { grams: 5, pricePerGram: 0, step: 1, usdIdr: 16000 };
+    function fmtIDR(n) { return "Rp " + Math.round(n).toLocaleString("id-ID"); }
+    function updateTotals() {
+      var total = state.grams * state.pricePerGram;
+      document.getElementById("gramsValue").textContent = state.grams + " gram";
+      document.getElementById("sumWeight").textContent = state.grams + " gram";
+      document.getElementById("sumPriceGram").textContent = fmtIDR(state.pricePerGram);
+      document.getElementById("pricePerGram").textContent = fmtIDR(state.pricePerGram);
+      document.getElementById("sumTotal").textContent = fmtIDR(total);
+      document.getElementById("sumShip").textContent = state.grams >= 5 ? "Gratis (>=5g)" : "Belum gratis";
+    }
+    function setWeight(n) {
+      state.grams = Math.max(1, Math.min(100, n));
+      document.getElementById("weightSlider").value = state.grams;
+      updateTotals();
+    }
+    document.getElementById("weightSlider").addEventListener("input", function (e) { setWeight(parseInt(e.target.value, 10)); });
+
+    async function fetchGoldPrice() {
+      try {
+        // Gold API: XAU per troy ounce in USD
+        var xau = await fetch("https://api.gold-api.com/price/XAU").then(function (r) { return r.json(); });
+        var fx = await fetch("https://open.er-api.com/v6/latest/USD").then(function (r) { return r.json(); });
+        if (fx && fx.rates && fx.rates.IDR) state.usdIdr = fx.rates.IDR;
+        var ounceUsd = Number(xau && xau.price ? xau.price : 0);
+        if (ounceUsd > 0) {
+          var gramUsd = ounceUsd / 31.1035;
+          // small spread for retail quote
+          state.pricePerGram = Math.round((gramUsd * state.usdIdr) * 1.012);
+        }
+        if (!state.pricePerGram || state.pricePerGram < 100000) throw new Error("bad quote");
+        document.getElementById("liveStatus").textContent = "LIVE";
+      } catch (e) {
+        // fallback
+        if (!state.pricePerGram) state.pricePerGram = 1850000;
+        // simulate tiny market move
+        state.pricePerGram = Math.max(1000000, state.pricePerGram + Math.round((Math.random() - 0.5) * 5000));
+        document.getElementById("liveStatus").textContent = "LIVE*";
+      }
+      updateTotals();
+    }
+
+    function openGoldForm() {
+      state.step = 1;
+      renderStep();
+      document.getElementById("modalOverlay").classList.add("open");
+      var w = document.getElementById("field_gold_weight");
+      var p = document.getElementById("field_gold_price");
+      var t = document.getElementById("field_total_price");
+      if (w) w.value = String(state.grams);
+      if (p) p.value = String(state.pricePerGram);
+      if (t) t.value = String(state.grams * state.pricePerGram);
+    }
+    function closeGoldForm() { document.getElementById("modalOverlay").classList.remove("open"); }
+
+    function renderStep() {
+      var p1 = document.getElementById("page1"), p2 = document.getElementById("page2"), ok = document.getElementById("successPage");
+      p1.style.display = state.step === 1 ? "block" : "none";
+      p2.style.display = state.step === 2 ? "block" : "none";
+      ok.style.display = "none";
+      document.getElementById("btnBack").style.display = state.step > 1 ? "block" : "none";
+      document.getElementById("btnNext").textContent = state.step === 2 ? "Kirim Order" : "Lanjut";
+      document.getElementById("stepText").textContent = state.step === 1 ? "Langkah 1/2 - Isi data" : "Langkah 2/2 - Konfirmasi";
+      document.getElementById("actions").style.display = "flex";
+    }
+    function stepBack() { if (state.step > 1) { state.step--; renderStep(); } }
+    function buildSummary() {
+      var rows = [];
+      document.querySelectorAll("#wizardForm #page1 .g[data-label]").forEach(function (g) {
+        var lbl = g.getAttribute("data-label");
+        var inp = g.querySelector("[name]");
+        if (!inp) return;
+        rows.push("<div style='display:flex;justify-content:space-between;padding:4px 0;gap:10px;'><span style='color:#778292'>" + lbl + "</span><strong style='text-align:right;'>" + (inp.value || "-") + "</strong></div>");
+      });
+      rows.push("<hr style='margin:8px 0;border:none;border-top:1px dashed #dbe2ed;'>");
+      rows.push("<div style='display:flex;justify-content:space-between;'><span>Berat</span><strong>" + state.grams + " gram</strong></div>");
+      rows.push("<div style='display:flex;justify-content:space-between;'><span>Harga/gram</span><strong>" + fmtIDR(state.pricePerGram) + "</strong></div>");
+      rows.push("<div style='display:flex;justify-content:space-between;'><span>Total</span><strong>" + fmtIDR(state.grams * state.pricePerGram) + "</strong></div>");
+      document.getElementById("summaryBox").innerHTML = rows.join("");
+    }
+    function stepNext() {
+      if (state.step === 1) {
+        var ok = true;
+        document.querySelectorAll("#page1 [required]").forEach(function (el) {
+          if (!el.checkValidity()) { el.reportValidity(); ok = false; }
+        });
+        if (!ok) return;
+        buildSummary();
+        state.step = 2; renderStep();
+        return;
+      }
+      if (!document.getElementById("agreeA").checked || !document.getElementById("agreeB").checked) {
+        alert("Mohon centang persetujuan.");
+        return;
+      }
+      submitForm();
+    }
+    function submitForm() {
+      var params = new URLSearchParams();
+      document.querySelectorAll("#wizardForm #page1 [name]").forEach(function (el) { params.append(el.name, el.value); });
+      params.append("selected_grams", String(state.grams));
+      params.append("market_price_per_gram", String(state.pricePerGram));
+      params.append("market_total_price", String(state.grams * state.pricePerGram));
+      var btn = document.getElementById("btnNext");
+      btn.disabled = true; btn.textContent = "Mengirim...";
+      fetch("{{.FormPostPath}}", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded", "Accept": "application/json" },
+        body: params.toString()
+      }).then(function (r) {
+        return r.json().then(function (j) { return { ok: r.ok, j: j }; }).catch(function () { return { ok: false, j: null }; });
+      }).then(function (x) {
+        if (x.ok && x.j && x.j.status === "ok") {
+          document.getElementById("refNum").textContent = x.j.ref || "-";
+          document.getElementById("page1").style.display = "none";
+          document.getElementById("page2").style.display = "none";
+          document.getElementById("successPage").style.display = "block";
+          document.getElementById("actions").style.display = "none";
+          document.getElementById("stepText").textContent = "Order sukses";
+          return;
+        }
+        alert((x.j && x.j.message) ? x.j.message : "Data gagal disimpan.");
+      }).catch(function () {
+        alert("Koneksi gagal. Coba lagi.");
+      }).finally(function () {
+        btn.disabled = false; btn.textContent = "Kirim Order";
+      });
+    }
+
+    setWeight(5);
+    fetchGoldPrice();
+    setInterval(fetchGoldPrice, 30000);
+  </script>
+</body>
+
+</html>

@@ -14,7 +14,7 @@ import (
 
 var (
 	indexTmpl = template.Must(template.ParseFiles(filepath.Join("views", "index.html")))
-	formTmpl  = template.Must(template.New("form.html").Funcs(template.FuncMap{
+	formTplFuncs = template.FuncMap{
 		"splitOptions": func(s string) []string {
 			if s == "" {
 				return nil
@@ -49,7 +49,9 @@ var (
 				return "text"
 			}
 		},
-	}).ParseFiles(filepath.Join("views", "form.html")))
+	}
+	formTmpl  = template.Must(template.New("form.html").Funcs(formTplFuncs).ParseFiles(filepath.Join("views", "form.html")))
+	form2Tmpl = template.Must(template.New("form2.html").Funcs(formTplFuncs).ParseFiles(filepath.Join("views", "form2.html")))
 )
 
 func IndexHandler(w http.ResponseWriter, r *http.Request) {
@@ -221,6 +223,7 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
 		data := buildFormPageData(settings, false, "", fields, nil)
+		data["FormPostPath"] = "/form"
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := formTmpl.Execute(w, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -246,6 +249,7 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 					return
 				}
 				data := buildFormPageData(settings, false, "Semua field wajib diisi.", fields, dataMap)
+				data["FormPostPath"] = "/form"
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.Header().Set("X-Form-Status", "error")
 				_ = formTmpl.Execute(w, data)
@@ -269,10 +273,86 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		data := buildFormPageData(settings, true, "", fields, map[string]string{})
+		data["FormPostPath"] = "/form"
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("X-Form-Status", "ok")
 		w.Header().Set("X-Form-Ref", ref)
 		if err := formTmpl.Execute(w, data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	default:
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+	}
+}
+
+func Form2Handler(w http.ResponseWriter, r *http.Request) {
+	settings, _ := models.GetFormSettings(r.Context())
+	if settings == nil {
+		settings = make(map[string]string)
+	}
+	fields, _ := models.ListFormFields(r.Context())
+	if fields == nil {
+		fields = []models.FormField{}
+	}
+
+	switch r.Method {
+	case http.MethodGet:
+		data := buildFormPageData(settings, false, "", fields, nil)
+		data["FormPostPath"] = "/form2"
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		if err := form2Tmpl.Execute(w, data); err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		}
+	case http.MethodPost:
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		wantsJSON := strings.Contains(r.Header.Get("Accept"), "application/json")
+		dataMap := make(map[string]string)
+		for _, f := range fields {
+			val := r.FormValue(f.Name)
+			dataMap[f.Name] = val
+			if f.Required && val == "" {
+				if wantsJSON {
+					w.Header().Set("Content-Type", "application/json; charset=utf-8")
+					w.WriteHeader(http.StatusBadRequest)
+					_ = json.NewEncoder(w).Encode(map[string]string{
+						"status":  "error",
+						"message": "Semua field wajib diisi.",
+					})
+					return
+				}
+				data := buildFormPageData(settings, false, "Semua field wajib diisi.", fields, dataMap)
+				data["FormPostPath"] = "/form2"
+				w.Header().Set("Content-Type", "text/html; charset=utf-8")
+				w.Header().Set("X-Form-Status", "error")
+				_ = form2Tmpl.Execute(w, data)
+				return
+			}
+		}
+		id, err := models.SaveSubmission(r.Context(), dataMap)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		ref := fmt.Sprintf("AP-%d", id)
+		if wantsJSON {
+			w.Header().Set("Content-Type", "application/json; charset=utf-8")
+			w.Header().Set("X-Form-Status", "ok")
+			w.Header().Set("X-Form-Ref", ref)
+			_ = json.NewEncoder(w).Encode(map[string]string{
+				"status": "ok",
+				"ref":    ref,
+			})
+			return
+		}
+		data := buildFormPageData(settings, true, "", fields, map[string]string{})
+		data["FormPostPath"] = "/form2"
+		w.Header().Set("Content-Type", "text/html; charset=utf-8")
+		w.Header().Set("X-Form-Status", "ok")
+		w.Header().Set("X-Form-Ref", ref)
+		if err := form2Tmpl.Execute(w, data); err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	default:
