@@ -4,39 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kelola Form — Admin</title>
-  <link rel="stylesheet" href="/static/css/admin-dashboard.css">
-  <script src="/static/js/theme.js"></script>
+  <link rel="stylesheet" href="/static/css/admin-form.css">
+  <link rel="stylesheet" href="/static/css/admin-nav.css">
+  <script src="/static/js/theme.js" defer></script>
+  <script src="/static/js/admin-form.js" defer></script>
 </head>
 <body>
   <header>
     <h1>Kelola Form</h1>
-    <nav style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-      <a href="/admin">Data User</a>
-      <a href="/admin/form">Kelola Form</a>
-      <a href="/admin/settings">Form Settings</a>
-      <a href="/admin/export?format=xlsx" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download Excel</a>
-      <a href="/admin/export?format=pdf" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download PDF</a>
-      <a href="/admin/logout">Keluar</a>
-      <button id="themeToggle" type="button" onclick="toggleTheme()" style="border:none;border-radius:999px;padding:6px 12px;font-size:11px;cursor:pointer;background:transparent;color:var(--text-muted);border:1px solid var(--border);"></button>
-    </nav>
+    {{template "admin-nav" .}}
   </header>
 
   <div class="container">
-    <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;max-width:640px;">
-      Field di bawah ini menentukan input yang tampil di halaman <a href="/form" target="_blank" rel="noopener">/form</a> (kolom <strong>Name</strong> = nama field saat POST).
-      Untuk <strong>select</strong>, isi opsi dipisah koma (contoh: <code>Laki-laki,Perempuan</code>).
+    <p class="form-help">
+      Field di bawah ini menentukan input yang tampil di halaman <strong>Awan Peduli</strong> (<code>/form</code>). Pratinjau lewat menu <strong>Preview</strong> di atas.
+      Kolom <strong>Name</strong> = nama field saat POST. Untuk <strong>select</strong>, isi opsi dipisah koma (contoh: <code>Laki-laki,Perempuan</code>).
       Simulasi cicilan di modal hanya muncul jika ada field bernama <code>loan_amount</code> (tipe number) dan <code>tenor</code> (select atau number).
     </p>
 
     {{if eq .Mode "list"}}
-    <div style="margin-bottom:14px;">
-      <a href="{{.FormAdminPath}}/add" class="btn" style="display:inline-block;text-decoration:none;">+ Tambah field</a>
-      <a href="{{.FormPagePath}}" target="_blank" rel="noopener" style="margin-left:10px;font-size:13px;color:var(--accent);">Preview {{.FormPagePath}} →</a>
+    <div class="form-actions">
+      <a href="{{.FormAdminPath}}/add" class="btn">+ Tambah field</a>
     </div>
     <div class="card">
       <div class="card-header">Daftar field</div>
       {{if .Fields}}
-      <div style="overflow-x:auto;">
+      <div class="table-wrap">
         <table>
           <thead>
             <tr>
@@ -53,13 +46,13 @@
             <tr>
               <td>{{.SortOrder}}</td>
               <td>{{.Label}}</td>
-              <td><code style="font-size:11px;">{{.Name}}</code></td>
+              <td><code class="field-name">{{.Name}}</code></td>
               <td>{{.FieldType}}</td>
               <td>{{if .Required}}Ya{{else}}Tidak{{end}}</td>
-              <td style="white-space:nowrap;">
-                <a href="{{$.FormAdminPath}}/edit?id={{.ID}}" style="font-size:12px;margin-right:8px;">Edit</a>
-                <form method="post" action="{{$.FormAdminPath}}/delete?id={{.ID}}" style="display:inline;" onsubmit="return confirm('Hapus field ini?');">
-                  <button type="submit" class="btn-del">Hapus</button>
+              <td class="row-actions">
+                <a href="{{$.FormAdminPath}}/edit?id={{.ID}}" class="btn-link">Edit</a>
+                <form method="post" action="{{$.FormAdminPath}}/delete?id={{.ID}}" class="inline-form" data-confirm="Hapus field ini?">
+                  <button type="submit" class="btn btn-danger">Hapus</button>
                 </form>
               </td>
             </tr>
@@ -76,7 +69,7 @@
     {{if eq .Mode "add"}}
     <div class="card">
       <div class="card-header">Field baru</div>
-      <form method="post" action="{{.FormAdminPath}}/add" style="max-width:520px;">
+      <form method="post" action="{{.FormAdminPath}}/add" class="field-form">
         <label for="label">Label (tampil ke user)</label>
         <input type="text" id="label" name="label" required>
 
@@ -97,11 +90,11 @@
         <label for="options">Opsi (hanya untuk select, pisahkan koma)</label>
         <input type="text" id="options" name="options" placeholder="Opsi1,Opsi2">
 
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <label class="checkbox-label">
           <input type="checkbox" name="required" value="1" checked> Wajib diisi
         </label>
 
-        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="form-actions">
           <button type="submit" class="btn">Simpan</button>
           <a href="{{.FormAdminPath}}" class="btn btn-ghost">Batal</a>
         </div>
@@ -113,7 +106,7 @@
     {{with .EditField}}
     <div class="card">
       <div class="card-header">Edit field</div>
-      <form method="post" action="{{$.FormAdminPath}}/edit?id={{.ID}}" style="max-width:520px;">
+      <form method="post" action="{{$.FormAdminPath}}/edit?id={{.ID}}" class="field-form">
         <label for="label">Label</label>
         <input type="text" id="label" name="label" value="{{.Label}}" required>
 
@@ -134,11 +127,11 @@
         <label for="options">Opsi (select)</label>
         <input type="text" id="options" name="options" value="{{.Options}}">
 
-        <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+        <label class="checkbox-label">
           <input type="checkbox" name="required" value="1" {{if .Required}}checked{{end}}> Wajib diisi
         </label>
 
-        <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
+        <div class="form-actions">
           <button type="submit" class="btn">Simpan</button>
           <a href="{{$.FormAdminPath}}" class="btn btn-ghost">Batal</a>
         </div>

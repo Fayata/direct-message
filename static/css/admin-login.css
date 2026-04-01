@@ -40,6 +40,22 @@
       padding: 28px 24px;
       box-shadow: 0 20px 50px rgba(0,0,0,0.4);
     }
+    .login-head {
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
+    }
+    .theme-toggle {
+      border:none;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:11px;
+      cursor:pointer;
+      background:transparent;
+      color:var(--text-muted);
+      border:1px solid var(--border);
+    }
     .card h1 {
       font-size: 18px;
       font-weight: 700;

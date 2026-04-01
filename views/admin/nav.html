@@ -1,0 +1,18 @@
+{{define "admin-nav"}}
+<nav class="admin-nav" aria-label="Menu admin">
+  <a href="/admin" class="admin-nav__link{{if eq .NavActive "data"}} is-active{{end}}">Data User</a>
+
+  <details class="nav-dd">
+    <summary class="nav-dd__summary">Preview <span class="nav-dd__chev" aria-hidden="true"></span></summary>
+    <div class="nav-dd__panel" role="menu">
+      <a href="/form" class="nav-dd__item" target="_blank" rel="noopener noreferrer" role="menuitem">Awan Peduli <span class="nav-dd__hint">/form</span></a>
+      <a href="/form2" class="nav-dd__item" target="_blank" rel="noopener noreferrer" role="menuitem">Awan Gold <span class="nav-dd__hint">/form2</span></a>
+    </div>
+  </details>
+
+  <a href="/admin/form" class="admin-nav__link{{if eq .NavActive "form"}} is-active{{end}}">Kelola Form</a>
+  <a href="/admin/settings" class="admin-nav__link{{if eq .NavActive "settings"}} is-active{{end}}">Form Settings</a>
+  <a href="/admin/logout" class="admin-nav__link admin-nav__link--muted">Keluar</a>
+  <button id="themeToggle" type="button" class="admin-nav__theme" aria-label="Ganti tema"></button>
+</nav>
+{{end}}

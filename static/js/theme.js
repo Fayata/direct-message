@@ -12,9 +12,15 @@ function setTheme(theme) {
 const storedTheme = localStorage.getItem(THEME_KEY) || 'dark';
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => setTheme(storedTheme));
+  document.addEventListener('DOMContentLoaded', () => {
+    setTheme(storedTheme);
+    const btn = document.getElementById('themeToggle');
+    if (btn) btn.addEventListener('click', toggleTheme);
+  });
 } else {
   setTheme(storedTheme);
+  const btn = document.getElementById('themeToggle');
+  if (btn) btn.addEventListener('click', toggleTheme);
 }
 
 function toggleTheme() {

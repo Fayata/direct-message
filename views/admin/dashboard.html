@@ -5,52 +5,94 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard Admin — WA Sender</title>
   <link rel="stylesheet" href="/static/css/admin-dashboard.css">
-  <script src="/static/js/theme.js"></script>
+  <link rel="stylesheet" href="/static/css/admin-nav.css">
+  <script src="/static/js/theme.js" defer></script>
+  <script src="/static/js/admin-dashboard.js" defer></script>
 </head>
 <body>
   <header>
     <h1>Dashboard Admin</h1>
-    <nav style="display:flex;align-items:center;gap:10px;">
-      <a href="/admin">Data User</a>
-      <a href="/admin/form">Kelola Form</a>
-      <a href="/admin/settings">Form Settings</a>
-      <a href="/admin/export?format=xlsx" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download Excel</a>
-      <a href="/admin/export?format=pdf" download style="background:rgba(0,229,160,0.15);color:var(--accent);border-color:var(--accent);">Download PDF</a>
-      <a href="/admin/logout">Keluar</a>
-      <button id="themeToggle" type="button" onclick="toggleTheme()" style="border:none;border-radius:999px;padding:6px 12px;font-size:11px;cursor:pointer;background:transparent;color:var(--text-muted);border:1px solid var(--border);">
-      </button>
-    </nav>
+    {{template "admin-nav" .}}
   </header>
   <div class="container">
-    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
-      <form method="get" action="/admin" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <input type="text" name="q" value="{{.Q}}" placeholder="Cari submission..." style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);min-width:220px;">
-        <select name="field" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);">
+    <section class="dash-stats" aria-label="Ringkasan">
+      <article class="dash-stat-card">
+        <div class="dash-stat-card__label">Awan Peduli</div>
+        <div class="dash-stat-card__value">{{.TotalPeduli}}</div>
+        <div class="dash-stat-card__sub">Total submission (tabel aktif bila sumber Awan Peduli)</div>
+        <div class="dash-stat-card__pill">24 jam: <strong>{{.Last24Peduli}}</strong> baru</div>
+      </article>
+      <article class="dash-stat-card dash-stat-card--gold">
+        <div class="dash-stat-card__label">Awan Gold</div>
+        <div class="dash-stat-card__value">{{.TotalAwanGold}}</div>
+        <div class="dash-stat-card__sub">Order emas (data terpisah di DB)</div>
+        <div class="dash-stat-card__pill">24 jam: <strong>{{.Last24AwanGold}}</strong> baru</div>
+      </article>
+      <article class="dash-trend">
+        <div class="dash-trend__head">
+          <h2 class="dash-trend__title">Tren 7 Hari Terakhir</h2>
+          <div class="dash-trend__legend">
+            <span class="legend legend--peduli">Awan Peduli</span>
+            <span class="legend legend--gold">Awan Gold</span>
+          </div>
+        </div>
+        <canvas id="trendChart"
+          class="dash-trend__canvas"
+          data-labels='{{toJSON .TrendLabels}}'
+          data-peduli='{{toJSON .TrendPeduli}}'
+          data-gold='{{toJSON .TrendGold}}'
+          aria-label="Grafik tren submission"
+        ></canvas>
+      </article>
+    </section>
+
+    <section class="source-tabs" aria-label="Sumber data">
+      <a href="/admin" class="source-tab{{if eq .Source "peduli"}} is-active{{end}}">Awan Peduli</a>
+      <a href="/admin?source=gold" class="source-tab{{if eq .Source "gold"}} is-active{{end}}">Awan Gold</a>
+    </section>
+
+    <section class="data-user-download" aria-label="Unduh data user">
+      <div class="data-user-download__text">
+        <span class="data-user-download__title">Unduh data</span>
+        <span class="data-user-download__hint">Isi file mengikuti tab Awan Peduli atau Awan Gold yang sedang dipilih.</span>
+      </div>
+      <div class="data-user-download__actions">
+        <a href="/admin/export?format=xlsx{{if eq .Source "gold"}}&source=gold{{end}}" class="btn-download" download>Excel</a>
+        <a href="/admin/export?format=pdf{{if eq .Source "gold"}}&source=gold{{end}}" class="btn-download" download>PDF</a>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <form method="get" action="/admin" class="search-form">
+        <input type="hidden" name="source" value="{{.Source}}">
+        <input class="input" type="text" name="q" value="{{.Q}}" placeholder="Cari submission...">
+        <select class="input" name="field">
           <option value="">Semua field</option>
           {{range .Fields}}
           <option value="{{.Name}}" {{if eq $.FieldKey .Name}}selected{{end}}>{{.Label}}</option>
           {{end}}
         </select>
-        <button type="submit" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;">Cari</button>
+        <button type="submit" class="btn-ghost-sm">Cari</button>
         {{if or .Q .FieldKey}}
-        <a href="/admin" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);color:var(--text-muted);text-decoration:none;">Reset</a>
+        <a href="/admin{{if eq .Source "gold"}}?source=gold{{end}}" class="btn-ghost-sm">Reset</a>
         {{end}}
       </form>
 
-      <div style="margin-left:auto;color:var(--text-muted);font-size:12px;">
+      <div class="page-meta">
         Halaman {{.Page}} / {{.MaxPage}} • Total {{.Total}}
       </div>
     </div>
 
     <div class="card">
-      <div class="card-header">Daftar data dari form ({{len .Submissions}} orang)</div>
+      <div class="card-header">Daftar data {{if eq .Source "gold"}}Awan Gold{{else}}Awan Peduli{{end}} ({{len .Submissions}} baris)</div>
       {{if .Submissions}}
-      <form method="post" action="/admin/bulk-delete" onsubmit="return confirm('Hapus semua data yang dipilih?');">
-      <div style="overflow-x:auto;">
+      <form method="post" action="/admin/bulk-delete" data-confirm="Hapus semua data yang dipilih?">
+      <input type="hidden" name="source" value="{{.Source}}">
+      <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th><input type="checkbox" onclick="document.querySelectorAll('input[name=ids]').forEach(cb => cb.checked = this.checked)"></th>
+            <th><input type="checkbox" data-select-all></th>
             <th>#</th>
             {{range .Fields}}
             <th>{{.Label}}</th>
@@ -69,15 +111,15 @@
             {{end}}
             <td class="hide-mobile date">{{formatTime $s.CreatedAt}}</td>
             <td>
-              <button type="submit" class="btn-del" formaction="/admin/delete?id={{$s.ID}}" onclick="return confirm('Hapus data ini?');">Hapus</button>
+              <button type="submit" class="btn-del" formaction="/admin/delete?id={{$s.ID}}&source={{$.Source}}" data-confirm="Hapus data ini?">Hapus</button>
             </td>
           </tr>
           {{end}}
         </tbody>
       </table>
       </div>
-      <div style="display:flex;justify-content:flex-end;padding:12px 16px;border-top:1px solid var(--border);gap:10px;align-items:center;flex-wrap:wrap;">
-        <button type="submit" style="padding:8px 12px;border-radius:8px;border:1px solid rgba(255,91,107,0.35);background:rgba(255,91,107,0.15);color:var(--danger);cursor:pointer;">Hapus terpilih</button>
+      <div class="bulk-bar">
+        <button type="submit" class="btn-del btn-del--bulk">Hapus terpilih</button>
       </div>
       </form>
       {{else}}
@@ -85,12 +127,12 @@
       {{end}}
     </div>
 
-    <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:14px;flex-wrap:wrap;">
+    <div class="pagination">
       {{if gt .Page 1}}
-      <a href="/admin?page={{add .Page -1}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);color:var(--text-muted);text-decoration:none;">← Prev</a>
+      <a href="/admin?page={{add .Page -1}}&source={{.Source}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}" class="btn-ghost-sm">← Prev</a>
       {{end}}
       {{if lt .Page .MaxPage}}
-      <a href="/admin?page={{add .Page 1}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}" style="padding:8px 12px;border-radius:8px;border:1px solid var(--border);color:var(--text-muted);text-decoration:none;">Next →</a>
+      <a href="/admin?page={{add .Page 1}}&source={{.Source}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}" class="btn-ghost-sm">Next →</a>
       {{end}}
     </div>
   </div>

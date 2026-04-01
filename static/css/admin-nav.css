@@ -1,0 +1,165 @@
+/* Shared admin top navigation — dropdowns + links */
+.admin-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.admin-nav__link {
+  color: var(--text-muted);
+  text-decoration: none;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border);
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+
+.admin-nav__link:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(0, 229, 160, 0.08);
+}
+
+.admin-nav__link.is-active {
+  color: var(--accent);
+  border-color: rgba(0, 229, 160, 0.45);
+  background: rgba(0, 229, 160, 0.1);
+}
+
+.admin-nav__link--muted {
+  border-color: transparent;
+  opacity: 0.85;
+}
+
+.admin-nav__link--muted:hover {
+  border-color: var(--border);
+}
+
+.admin-nav__theme {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 11px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--text-muted);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.admin-nav__theme:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* <details> dropdowns */
+.nav-dd {
+  position: relative;
+}
+
+.nav-dd__summary {
+  list-style: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm, 6px);
+  border: 1px solid var(--border);
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  user-select: none;
+}
+
+.nav-dd__summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-dd__summary:hover,
+.nav-dd[open] > .nav-dd__summary {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(0, 229, 160, 0.08);
+}
+
+.nav-dd--active > .nav-dd__summary {
+  color: var(--accent);
+  border-color: rgba(0, 229, 160, 0.45);
+  background: rgba(0, 229, 160, 0.1);
+}
+
+.nav-dd__chev {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid currentColor;
+  opacity: 0.7;
+  margin-top: 2px;
+  transition: transform 0.2s;
+}
+
+.nav-dd[open] .nav-dd__chev {
+  transform: rotate(180deg);
+}
+
+.nav-dd__panel {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 220px;
+  padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 10px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+  z-index: 100;
+}
+
+body[data-theme="light"] .nav-dd__panel {
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.nav-dd__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm, 6px);
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.15s;
+}
+
+.nav-dd__item:hover {
+  background: rgba(0, 229, 160, 0.08);
+}
+
+.nav-dd__item.is-active {
+  color: var(--accent);
+  background: rgba(0, 229, 160, 0.1);
+}
+
+.nav-dd__item--accent {
+  color: var(--accent);
+}
+
+.nav-dd__hint {
+  font-size: 11px;
+  color: var(--text-muted);
+  font-family: ui-monospace, monospace;
+}
+
+@media (max-width: 640px) {
+  .nav-dd__panel {
+    right: 0;
+    left: auto;
+  }
+}

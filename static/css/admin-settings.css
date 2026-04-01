@@ -31,16 +31,14 @@
       gap: 12px;
     }
     header h1 { font-size: 16px; font-weight: 700; letter-spacing: 0.04em; }
-    header a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 13px;
-      padding: 8px 14px;
-      border-radius: 6px;
-      border: 1px solid var(--border);
-    }
-    header a:hover { color: var(--accent); border-color: var(--accent); background: rgba(0,229,160,0.08); }
     .container { max-width: 900px; margin: 0 auto; padding: 24px 20px; }
+    .settings-hint {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+      margin-bottom: 16px;
+      max-width: 680px;
+    }
     .card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -78,6 +76,7 @@
     .btn:hover { background: #00ffb2; }
     .btn-ghost { background: transparent; color: var(--text-muted); border: 1px solid var(--border); }
     .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .form-actions { margin-top:16px; display:flex; gap:10px; flex-wrap:wrap; }
     .alert {
       padding: 10px 12px;
       border-radius: 8px;

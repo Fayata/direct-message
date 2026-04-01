@@ -5,16 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Login — WA Sender</title>
   <link rel="stylesheet" href="/static/css/admin-login.css">
-  <script src="/static/js/theme.js"></script>
+  <script src="/static/js/theme.js" defer></script>
 </head>
 <body>
   <div class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+    <div class="login-head">
       <div>
         <h1>Admin Login</h1>
         <p class="sub">Masuk untuk mengelola data user.</p>
       </div>
-      <button id="themeToggle" type="button" onclick="toggleTheme()" style="border:none;border-radius:999px;padding:6px 10px;font-size:11px;cursor:pointer;background:transparent;color:var(--text-muted);border:1px solid var(--border);">
+      <button id="themeToggle" type="button" class="theme-toggle">
       </button>
     </div>
     {{if .Error}}

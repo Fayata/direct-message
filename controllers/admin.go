@@ -1,6 +1,8 @@
 package controllers
 
 import (
+	"context"
+	"encoding/json"
 	"html/template"
 	"log"
 	"net/http"
@@ -38,17 +40,33 @@ func init() {
 	adminLogin = template.Must(template.ParseFiles(filepath.Join("views", "admin", "login.html")))
 	adminDashboard = template.Must(template.New("dashboard.html").Funcs(template.FuncMap{
 		"add": func(a, b int) int { return a + b },
+		"toJSON": func(v any) template.JS {
+			b, err := json.Marshal(v)
+			if err != nil {
+				return template.JS("[]")
+			}
+			return template.JS(b)
+		},
 		"formatTime": func(t time.Time) string {
 			if t.IsZero() {
 				return "-"
 			}
 			return t.Format("02 Jan 2006 15:04")
 		},
-	}).ParseFiles(filepath.Join("views", "admin", "dashboard.html")))
+	}).ParseFiles(
+		filepath.Join("views", "admin", "dashboard.html"),
+		filepath.Join("views", "admin", "nav.html"),
+	))
 	adminFormTmpl = template.Must(template.New("form.html").Funcs(template.FuncMap{
 		"add": func(a, b int) int { return a + b },
-	}).ParseFiles(filepath.Join("views", "admin", "form.html")))
-	adminSettings = template.Must(template.ParseFiles(filepath.Join("views", "admin", "settings.html")))
+	}).ParseFiles(
+		filepath.Join("views", "admin", "form.html"),
+		filepath.Join("views", "admin", "nav.html"),
+	))
+	adminSettings = template.Must(template.ParseFiles(
+		filepath.Join("views", "admin", "settings.html"),
+		filepath.Join("views", "admin", "nav.html"),
+	))
 }
 
 func getAdminCreds() (user, pass string) {
@@ -136,9 +154,40 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fields, err := models.ListFormFields(r.Context())
-	if err != nil {
-		fields = []models.FormField{}
+	source := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("source")))
+	if source != "gold" {
+		source = "peduli"
+	}
+
+	var (
+		fields      []models.FormField
+		total       int
+		submissions []models.Submission
+		err         error
+	)
+
+	if source == "gold" {
+		fields, err = models.ListForm2Fields(r.Context())
+		if err != nil {
+			fields = []models.FormField{}
+		}
+		total, err = models.CountForm2Submissions(r.Context())
+		if err != nil {
+			log.Printf("CountForm2Submissions: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		fields, err = models.ListFormFields(r.Context())
+		if err != nil {
+			fields = []models.FormField{}
+		}
+		total, err = models.CountSubmissions(r.Context())
+		if err != nil {
+			log.Printf("CountSubmissions: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	pageSize := 50
@@ -149,13 +198,6 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	fieldKey := strings.TrimSpace(r.URL.Query().Get("field"))
 
-	// Total rows untuk pagination (tanpa filter q)
-	total, err := models.CountSubmissions(r.Context())
-	if err != nil {
-		log.Printf("CountSubmissions: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
 	maxPage := (total + pageSize - 1) / pageSize
 	if maxPage < 1 {
 		maxPage = 1
@@ -165,11 +207,20 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	offset := (page - 1) * pageSize
 
-	submissions, err := models.ListSubmissionsPage(r.Context(), pageSize, offset)
-	if err != nil {
-		log.Printf("ListSubmissionsPage: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	if source == "gold" {
+		submissions, err = models.ListForm2SubmissionsPage(r.Context(), pageSize, offset)
+		if err != nil {
+			log.Printf("ListForm2SubmissionsPage: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		submissions, err = models.ListSubmissionsPage(r.Context(), pageSize, offset)
+		if err != nil {
+			log.Printf("ListSubmissionsPage: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 
 	// Filter sederhana di-memory (berlaku pada halaman saat ini).
@@ -197,16 +248,32 @@ func AdminDashboardHandler(w http.ResponseWriter, r *http.Request) {
 		submissions = filtered
 	}
 
+	since24 := time.Now().Add(-24 * time.Hour)
+	last24Peduli, _ := models.CountSubmissionsSince(r.Context(), since24)
+	last24Gold, _ := models.CountForm2SubmissionsSince(r.Context(), since24)
+	totalPeduli, _ := models.CountSubmissions(r.Context())
+	totalGold, _ := models.CountForm2Submissions(r.Context())
+	trendLabels, trendPeduli, trendGold := build7DayTrend(r.Context())
+
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	if err := adminDashboard.Execute(w, map[string]any{
-		"Fields":      fields,
-		"Submissions": submissions,
-		"Page":        page,
-		"MaxPage":     maxPage,
-		"PageSize":    pageSize,
-		"Total":       total,
-		"Q":           q,
-		"FieldKey":    fieldKey,
+		"Fields":         fields,
+		"Submissions":    submissions,
+		"Page":           page,
+		"MaxPage":        maxPage,
+		"PageSize":       pageSize,
+		"Total":          total,
+		"Q":              q,
+		"FieldKey":       fieldKey,
+		"NavActive":      "data",
+		"Source":         source,
+		"TotalPeduli":    totalPeduli,
+		"TotalAwanGold":  totalGold,
+		"Last24Peduli":   last24Peduli,
+		"Last24AwanGold": last24Gold,
+		"TrendLabels":    trendLabels,
+		"TrendPeduli":    trendPeduli,
+		"TrendGold":      trendGold,
 	}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
@@ -223,12 +290,23 @@ func AdminDeleteSubmissionHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/admin", http.StatusFound)
 		return
 	}
-	if err := models.DeleteSubmission(r.Context(), id); err != nil {
-		log.Printf("DeleteSubmission: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+	source := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("source")))
+	var delErr error
+	if source == "gold" {
+		delErr = models.DeleteForm2Submission(r.Context(), id)
+	} else {
+		delErr = models.DeleteSubmission(r.Context(), id)
+	}
+	if delErr != nil {
+		log.Printf("DeleteSubmission (%s): %v", source, delErr)
+		http.Error(w, delErr.Error(), http.StatusInternalServerError)
 		return
 	}
-	http.Redirect(w, r, "/admin", http.StatusFound)
+	redirectTo := "/admin"
+	if source == "gold" {
+		redirectTo = "/admin?source=gold"
+	}
+	http.Redirect(w, r, redirectTo, http.StatusFound)
 }
 
 func AdminBulkDeleteSubmissionsHandler(w http.ResponseWriter, r *http.Request) {
@@ -240,15 +318,59 @@ func AdminBulkDeleteSubmissionsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+	source := strings.TrimSpace(strings.ToLower(r.FormValue("source")))
 	ids := r.Form["ids"]
 	for _, idStr := range ids {
 		id, err := strconv.ParseInt(idStr, 10, 64)
 		if err != nil || id <= 0 {
 			continue
 		}
+		if source == "gold" {
+			_ = models.DeleteForm2Submission(r.Context(), id)
+			continue
+		}
 		_ = models.DeleteSubmission(r.Context(), id)
 	}
-	http.Redirect(w, r, "/admin", http.StatusFound)
+	redirectTo := "/admin"
+	if source == "gold" {
+		redirectTo = "/admin?source=gold"
+	}
+	http.Redirect(w, r, redirectTo, http.StatusFound)
+}
+
+func build7DayTrend(ctx context.Context) ([]string, []int, []int) {
+	labels := make([]string, 0, 7)
+	peduli := make([]int, 0, 7)
+	gold := make([]int, 0, 7)
+
+	peduliRows, _ := models.ListSubmissions(ctx)
+	goldRows, _ := models.ListForm2Submissions(ctx)
+	peduliMap := map[string]int{}
+	goldMap := map[string]int{}
+	for _, s := range peduliRows {
+		if s.CreatedAt.IsZero() {
+			continue
+		}
+		key := s.CreatedAt.Format("2006-01-02")
+		peduliMap[key]++
+	}
+	for _, s := range goldRows {
+		if s.CreatedAt.IsZero() {
+			continue
+		}
+		key := s.CreatedAt.Format("2006-01-02")
+		goldMap[key]++
+	}
+
+	now := time.Now()
+	for i := 6; i >= 0; i-- {
+		d := now.AddDate(0, 0, -i)
+		key := d.Format("2006-01-02")
+		labels = append(labels, d.Format("02 Jan"))
+		peduli = append(peduli, peduliMap[key])
+		gold = append(gold, goldMap[key])
+	}
+	return labels, peduli, gold
 }
 
 func AdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
@@ -261,8 +383,9 @@ func AdminSettingsHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodGet:
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		_ = adminSettings.Execute(w, map[string]any{
-			"Settings": settings,
-			"Saved":    r.URL.Query().Get("saved") == "1",
+			"Settings":  settings,
+			"Saved":     r.URL.Query().Get("saved") == "1",
+			"NavActive": "settings",
 		})
 	case http.MethodPost:
 		if err := r.ParseForm(); err != nil {
@@ -320,6 +443,7 @@ func adminFormList(w http.ResponseWriter, r *http.Request) {
 		"Mode":            "list",
 		"FormAdminPath":   "/admin/form",
 		"FormPagePath":    "/form",
+		"NavActive":       "form",
 	})
 }
 
@@ -332,6 +456,7 @@ func adminFormAdd(w http.ResponseWriter, r *http.Request) {
 			"Mode":          "add",
 			"FormAdminPath": "/admin/form",
 			"FormPagePath":  "/form",
+			"NavActive":     "form",
 		})
 		return
 	}
@@ -385,6 +510,7 @@ func adminFormEdit(w http.ResponseWriter, r *http.Request) {
 			"Mode":            "edit",
 			"FormAdminPath":   "/admin/form",
 			"FormPagePath":    "/form",
+			"NavActive":       "form",
 		})
 		return
 	}
@@ -443,12 +569,28 @@ func AdminExportHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	format := r.URL.Query().Get("format")
-	fields, _ := models.ListFormFields(r.Context())
-	submissions, err := models.ListSubmissions(r.Context())
-	if err != nil {
-		log.Printf("ListSubmissions: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	source := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("source")))
+	var (
+		fields      []models.FormField
+		submissions []models.Submission
+		err         error
+	)
+	if source == "gold" {
+		fields, _ = models.ListForm2Fields(r.Context())
+		submissions, err = models.ListForm2Submissions(r.Context())
+		if err != nil {
+			log.Printf("ListForm2Submissions: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	} else {
+		fields, _ = models.ListFormFields(r.Context())
+		submissions, err = models.ListSubmissions(r.Context())
+		if err != nil {
+			log.Printf("ListSubmissions: %v", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 	}
 	switch format {
 	case "xlsx", "excel":

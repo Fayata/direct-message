@@ -19,6 +19,8 @@ func main() {
 	http.HandleFunc("/api/send", controllers.SendMessageHandler)
 	http.HandleFunc("/form", controllers.FormHandler)
 	http.HandleFunc("/form2", controllers.Form2Handler)
+	http.HandleFunc("/awanpinjam.id", controllers.FormHandler)
+	http.HandleFunc("/awan.emas.id", controllers.Form2Handler)
 
 	http.HandleFunc("/admin/login", controllers.AdminLoginHandler)
 	http.HandleFunc("/admin/logout", controllers.AdminLogoutHandler)

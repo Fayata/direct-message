@@ -556,6 +556,22 @@ func CountSubmissions(ctx context.Context) (int, error) {
 	return n, err
 }
 
+// CountSubmissionsSince menghitung submission form utama (Awan Peduli) sejak waktu tertentu.
+func CountSubmissionsSince(ctx context.Context, since time.Time) (int, error) {
+	cutoff := since.Format(time.RFC3339)
+	var n int
+	err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM form_submissions WHERE created_at >= ?`, cutoff).Scan(&n)
+	return n, err
+}
+
+// CountForm2SubmissionsSince menghitung submission Awan Gold sejak waktu tertentu.
+func CountForm2SubmissionsSince(ctx context.Context, since time.Time) (int, error) {
+	cutoff := since.Format(time.RFC3339)
+	var n int
+	err := db.QueryRowContext(ctx, `SELECT COUNT(*) FROM form2_submissions WHERE created_at >= ?`, cutoff).Scan(&n)
+	return n, err
+}
+
 // ListSubmissionsPage mengembalikan subset submissions (pagination sederhana).
 // NOTE: filtering dilakukan di app layer (data JSON), jadi kita tetap baca data JSON.
 func ListSubmissionsPage(ctx context.Context, limit, offset int) ([]Submission, error) {
