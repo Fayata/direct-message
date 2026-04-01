@@ -3,30 +3,52 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Login — WA Sender</title>
-  <link rel="stylesheet" href="/static/css/admin-login.css">
+  <title>Login — Awan Admin</title>
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css">
   <script src="/static/js/theme.js" defer></script>
 </head>
 <body>
-  <div class="card">
-    <div class="login-head">
-      <div>
-        <h1>Admin Login</h1>
-        <p class="sub">Masuk untuk mengelola data user.</p>
+<div class="login-wrap">
+  <div class="login-card">
+    <!-- Header -->
+    <div class="login-brand">
+      <div class="login-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>
+        </svg>
       </div>
-      <button id="themeToggle" type="button" class="theme-toggle">
+      <div class="login-title">Awan Admin</div>
+      <div class="login-sub">Masuk ke dashboard pengelolaan data</div>
+    </div>
+
+    {{if .Error}}
+    <div class="alert-error">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;flex-shrink:0">
+        <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      {{.Error}}
+    </div>
+    {{end}}
+
+    <form class="login-form" method="post" action="/admin/login">
+      <div class="fg">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" placeholder="admin" required autofocus autocomplete="username">
+      </div>
+      <div class="fg">
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" placeholder="••••••••" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-login">Masuk ke Dashboard</button>
+    </form>
+
+    <div style="margin-top:20px;text-align:center;">
+      <button id="themeToggle" type="button" style="background:transparent;border:1px solid var(--border2);border-radius:var(--radius-sm);padding:6px 14px;font-size:11px;color:var(--text-3);cursor:pointer;font-family:var(--sans);transition:var(--transition);">
+        Ganti Tema
       </button>
     </div>
-    {{if .Error}}
-    <div class="alert">{{.Error}}</div>
-    {{end}}
-    <form method="post" action="/admin/login">
-      <label for="username">Username</label>
-      <input type="text" id="username" name="username" placeholder="admin" required autofocus>
-      <label for="password">Password</label>
-      <input type="password" id="password" name="password" placeholder="••••••••" required>
-      <button type="submit" class="btn">Masuk</button>
-    </form>
   </div>
+</div>
 </body>
 </html>

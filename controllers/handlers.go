@@ -210,6 +210,21 @@ func buildFormPageData(settings map[string]string, success bool, errMsg string, 
 	return data
 }
 
+// buildFormPageDataSingleStep dipakai untuk form yang hanya punya 1 halaman input,
+// namun tetap bisa punya step konfirmasi (tanpa field tambahan).
+func buildFormPageDataSingleStep(settings map[string]string, success bool, errMsg string, fields []models.FormField, values map[string]string) map[string]any {
+	data := formData(settings, success, errMsg)
+	data["Fields"] = fields
+	data["FieldRows1"] = pairFieldsForLayout(fields)
+	data["FieldRows2"] = [][]models.FormField{}
+	data["HasPart2"] = false
+	if values == nil {
+		values = map[string]string{}
+	}
+	data["Values"] = values
+	return data
+}
+
 func FormHandler(w http.ResponseWriter, r *http.Request) {
 	settings, _ := models.GetFormSettings(r.Context())
 	if settings == nil {
@@ -286,18 +301,18 @@ func FormHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Form2Handler(w http.ResponseWriter, r *http.Request) {
-	settings, _ := models.GetFormSettings(r.Context())
+	settings, _ := models.GetForm2Settings(r.Context())
 	if settings == nil {
 		settings = make(map[string]string)
 	}
-	fields, _ := models.ListFormFields(r.Context())
+	fields, _ := models.ListForm2Fields(r.Context())
 	if fields == nil {
 		fields = []models.FormField{}
 	}
 
 	switch r.Method {
 	case http.MethodGet:
-		data := buildFormPageData(settings, false, "", fields, nil)
+		data := buildFormPageDataSingleStep(settings, false, "", fields, nil)
 		data["FormPostPath"] = "/form2"
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		if err := form2Tmpl.Execute(w, data); err != nil {
@@ -323,7 +338,7 @@ func Form2Handler(w http.ResponseWriter, r *http.Request) {
 					})
 					return
 				}
-				data := buildFormPageData(settings, false, "Semua field wajib diisi.", fields, dataMap)
+				data := buildFormPageDataSingleStep(settings, false, "Semua field wajib diisi.", fields, dataMap)
 				data["FormPostPath"] = "/form2"
 				w.Header().Set("Content-Type", "text/html; charset=utf-8")
 				w.Header().Set("X-Form-Status", "error")
@@ -331,7 +346,7 @@ func Form2Handler(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		id, err := models.SaveSubmission(r.Context(), dataMap)
+		id, err := models.SaveForm2Submission(r.Context(), dataMap)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -347,7 +362,7 @@ func Form2Handler(w http.ResponseWriter, r *http.Request) {
 			})
 			return
 		}
-		data := buildFormPageData(settings, true, "", fields, map[string]string{})
+		data := buildFormPageDataSingleStep(settings, true, "", fields, map[string]string{})
 		data["FormPostPath"] = "/form2"
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 		w.Header().Set("X-Form-Status", "ok")

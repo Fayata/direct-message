@@ -477,7 +477,7 @@
           <span class="live" id="liveStatus">LIVE</span>
         </div>
         <div class="price-main" id="pricePerGram">Rp 0</div>
-        <div class="price-caption">Harga emas per gram (update otomatis)</div>
+        <div class="price-caption">Harga emas per gram </div>
 
         <div class="slider-box">
           <div class="slider-row">
@@ -577,6 +577,27 @@
   <script>
     var state = { grams: 5, pricePerGram: 0, step: 1, usdIdr: 16000 };
     function fmtIDR(n) { return "Rp " + Math.round(n).toLocaleString("id-ID"); }
+    function syncCalculatedFields() {
+      var total = state.grams * state.pricePerGram;
+      var maps = [
+        { keys: ["gold_weight", "selected_grams", "grams", "berat_emas"], value: String(state.grams) },
+        { keys: ["gold_price", "market_price_per_gram", "harga_per_gram"], value: String(state.pricePerGram) },
+        { keys: ["total_price", "market_total_price", "total_bayar"], value: String(total) }
+      ];
+      maps.forEach(function (m) {
+        m.keys.forEach(function (k) {
+          var el = document.getElementById("field_" + k);
+          if (!el) return;
+          el.value = m.value;
+          if (el.tagName === "INPUT") {
+            el.readOnly = true;
+            el.setAttribute("aria-readonly", "true");
+          } else if (el.tagName === "SELECT") {
+            el.disabled = true;
+          }
+        });
+      });
+    }
     function updateTotals() {
       var total = state.grams * state.pricePerGram;
       document.getElementById("gramsValue").textContent = state.grams + " gram";
@@ -585,6 +606,7 @@
       document.getElementById("pricePerGram").textContent = fmtIDR(state.pricePerGram);
       document.getElementById("sumTotal").textContent = fmtIDR(total);
       document.getElementById("sumShip").textContent = state.grams >= 5 ? "Gratis (>=5g)" : "Belum gratis";
+      syncCalculatedFields();
     }
     function setWeight(n) {
       state.grams = Math.max(1, Math.min(100, n));
@@ -621,12 +643,7 @@
       state.step = 1;
       renderStep();
       document.getElementById("modalOverlay").classList.add("open");
-      var w = document.getElementById("field_gold_weight");
-      var p = document.getElementById("field_gold_price");
-      var t = document.getElementById("field_total_price");
-      if (w) w.value = String(state.grams);
-      if (p) p.value = String(state.pricePerGram);
-      if (t) t.value = String(state.grams * state.pricePerGram);
+      syncCalculatedFields();
     }
     function closeGoldForm() { document.getElementById("modalOverlay").classList.remove("open"); }
 
@@ -673,6 +690,7 @@
       submitForm();
     }
     function submitForm() {
+      syncCalculatedFields();
       var params = new URLSearchParams();
       document.querySelectorAll("#wizardForm #page1 [name]").forEach(function (el) { params.append(el.name, el.value); });
       params.append("selected_grams", String(state.grams));

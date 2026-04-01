@@ -3,138 +3,236 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard Admin — WA Sender</title>
+  <title>Dashboard — Awan Admin</title>
   <link rel="stylesheet" href="/static/css/admin-dashboard.css">
-  <link rel="stylesheet" href="/static/css/admin-nav.css">
   <script src="/static/js/theme.js" defer></script>
   <script src="/static/js/admin-dashboard.js" defer></script>
 </head>
 <body>
-  <header>
-    <h1>Dashboard Admin</h1>
-    {{template "admin-nav" .}}
-  </header>
-  <div class="container">
-    <section class="dash-stats" aria-label="Ringkasan">
-      <article class="dash-stat-card">
-        <div class="dash-stat-card__label">Awan Peduli</div>
-        <div class="dash-stat-card__value">{{.TotalPeduli}}</div>
-        <div class="dash-stat-card__sub">Total submission (tabel aktif bila sumber Awan Peduli)</div>
-        <div class="dash-stat-card__pill">24 jam: <strong>{{.Last24Peduli}}</strong> baru</div>
-      </article>
-      <article class="dash-stat-card dash-stat-card--gold">
-        <div class="dash-stat-card__label">Awan Gold</div>
-        <div class="dash-stat-card__value">{{.TotalAwanGold}}</div>
-        <div class="dash-stat-card__sub">Order emas (data terpisah di DB)</div>
-        <div class="dash-stat-card__pill">24 jam: <strong>{{.Last24AwanGold}}</strong> baru</div>
-      </article>
-      <article class="dash-trend">
-        <div class="dash-trend__head">
-          <h2 class="dash-trend__title">Tren 7 Hari Terakhir</h2>
-          <div class="dash-trend__legend">
-            <span class="legend legend--peduli">Awan Peduli</span>
-            <span class="legend legend--gold">Awan Gold</span>
+<div class="admin-layout">
+  {{template "admin-nav" .}}
+
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-breadcrumb">
+        <span>Awan Admin</span>
+        <span class="sep">/</span>
+        <span class="current">Dashboard</span>
+      </div>
+      <div class="topbar-actions">
+        <a href="/admin/export?format=xlsx{{if eq .Source "gold"}}&source=gold{{end}}" class="topbar-btn" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export Excel
+        </a>
+        <a href="/admin/export?format=pdf{{if eq .Source "gold"}}&source=gold{{end}}" class="topbar-btn" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+          </svg>
+          Export PDF
+        </a>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT -->
+    <div class="page-container">
+      <div class="page-header">
+        <h1 class="page-title">Data Submission</h1>
+        <p class="page-subtitle">Pantau pengajuan masuk secara realtime dari seluruh form.</p>
+      </div>
+
+      <!-- STATS -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div class="stat-label">Total Awan Peduli</div>
+          <div class="stat-value">{{.TotalPeduli}}</div>
+          <div class="stat-pill">+{{.Last24Peduli}} hari ini</div>
+        </div>
+        <div class="stat-card gold">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </div>
+          <div class="stat-label">Total Awan Gold</div>
+          <div class="stat-value">{{.TotalAwanGold}}</div>
+          <div class="stat-pill">+{{.Last24AwanGold}} hari ini</div>
+        </div>
+        <div class="stat-card info">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+            </svg>
+          </div>
+          <div class="stat-label">Aktif 24 Jam</div>
+          <div class="stat-value">{{add .Last24Peduli .Last24AwanGold}}</div>
+          <div class="stat-pill">Total kedua form</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+              <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="stat-label">Total Semua</div>
+          <div class="stat-value">{{add .TotalPeduli .TotalAwanGold}}</div>
+          <div class="stat-pill">Semua submission</div>
+        </div>
+      </div>
+
+      <!-- TREND CHART -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <div class="chart-title">Tren 7 Hari Terakhir</div>
+          <div class="chart-legend">
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#3dd68c;"></div>
+              Awan Peduli
+            </div>
+            <div class="legend-item">
+              <div class="legend-dot" style="background:#f5c842;"></div>
+              Awan Gold
+            </div>
           </div>
         </div>
-        <canvas id="trendChart"
-          class="dash-trend__canvas"
-          data-labels='{{toJSON .TrendLabels}}'
-          data-peduli='{{toJSON .TrendPeduli}}'
-          data-gold='{{toJSON .TrendGold}}'
-          aria-label="Grafik tren submission"
-        ></canvas>
-      </article>
-    </section>
-
-    <section class="source-tabs" aria-label="Sumber data">
-      <a href="/admin" class="source-tab{{if eq .Source "peduli"}} is-active{{end}}">Awan Peduli</a>
-      <a href="/admin?source=gold" class="source-tab{{if eq .Source "gold"}} is-active{{end}}">Awan Gold</a>
-    </section>
-
-    <section class="data-user-download" aria-label="Unduh data user">
-      <div class="data-user-download__text">
-        <span class="data-user-download__title">Unduh data</span>
-        <span class="data-user-download__hint">Isi file mengikuti tab Awan Peduli atau Awan Gold yang sedang dipilih.</span>
+        <div class="chart-canvas-wrap">
+          <canvas id="trendChart"
+            data-labels='{{toJSON .TrendLabels}}'
+            data-peduli='{{toJSON .TrendPeduli}}'
+            data-gold='{{toJSON .TrendGold}}'
+            aria-label="Grafik tren submission"
+          ></canvas>
+        </div>
       </div>
-      <div class="data-user-download__actions">
-        <a href="/admin/export?format=xlsx{{if eq .Source "gold"}}&source=gold{{end}}" class="btn-download" download>Excel</a>
-        <a href="/admin/export?format=pdf{{if eq .Source "gold"}}&source=gold{{end}}" class="btn-download" download>PDF</a>
+
+      <!-- SOURCE TABS + TOOLBAR -->
+      <div class="source-tabs" aria-label="Sumber data">
+        <a href="/admin" class="source-tab{{if eq .Source "peduli"}} is-active{{end}}">Awan Peduli</a>
+        <a href="/admin?source=gold" class="source-tab{{if eq .Source "gold"}} is-active{{end}}">Awan Gold</a>
       </div>
-    </section>
 
-    <div class="toolbar">
-      <form method="get" action="/admin" class="search-form">
-        <input type="hidden" name="source" value="{{.Source}}">
-        <input class="input" type="text" name="q" value="{{.Q}}" placeholder="Cari submission...">
-        <select class="input" name="field">
-          <option value="">Semua field</option>
-          {{range .Fields}}
-          <option value="{{.Name}}" {{if eq $.FieldKey .Name}}selected{{end}}>{{.Label}}</option>
-          {{end}}
-        </select>
-        <button type="submit" class="btn-ghost-sm">Cari</button>
-        {{if or .Q .FieldKey}}
-        <a href="/admin{{if eq .Source "gold"}}?source=gold{{end}}" class="btn-ghost-sm">Reset</a>
-        {{end}}
-      </form>
-
-      <div class="page-meta">
-        Halaman {{.Page}} / {{.MaxPage}} • Total {{.Total}}
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-header">Daftar data {{if eq .Source "gold"}}Awan Gold{{else}}Awan Peduli{{end}} ({{len .Submissions}} baris)</div>
-      {{if .Submissions}}
-      <form method="post" action="/admin/bulk-delete" data-confirm="Hapus semua data yang dipilih?">
-      <input type="hidden" name="source" value="{{.Source}}">
-      <div class="table-wrap">
-      <table>
-        <thead>
-          <tr>
-            <th><input type="checkbox" data-select-all></th>
-            <th>#</th>
+      <div class="toolbar">
+        <form method="get" action="/admin" style="display:contents;">
+          <input type="hidden" name="source" value="{{.Source}}">
+          <div class="search-wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <input class="search-input" type="text" name="q" value="{{.Q}}" placeholder="Cari submission...">
+          </div>
+          <select class="toolbar-select" name="field">
+            <option value="">Semua field</option>
             {{range .Fields}}
-            <th>{{.Label}}</th>
+            <option value="{{.Name}}" {{if eq $.FieldKey .Name}}selected{{end}}>{{.Label}}</option>
             {{end}}
-            <th class="hide-mobile">Waktu</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody>
-          {{range $i, $s := .Submissions}}
-          <tr>
-            <td><input type="checkbox" name="ids" value="{{$s.ID}}"></td>
-            <td>{{add $i 1}}</td>
-            {{range $.Fields}}
-            <td>{{index $s.Data .Name}}</td>
-            {{end}}
-            <td class="hide-mobile date">{{formatTime $s.CreatedAt}}</td>
-            <td>
-              <button type="submit" class="btn-del" formaction="/admin/delete?id={{$s.ID}}&source={{$.Source}}" data-confirm="Hapus data ini?">Hapus</button>
-            </td>
-          </tr>
+          </select>
+          <button type="submit" class="topbar-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+              <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            Cari
+          </button>
+          {{if or .Q .FieldKey}}
+          <a href="/admin{{if eq .Source "gold"}}?source=gold{{end}}" class="topbar-btn">Reset</a>
           {{end}}
-        </tbody>
-      </table>
+        </form>
+        <div class="toolbar-meta">Hal. {{.Page}}/{{.MaxPage}} &nbsp;·&nbsp; {{.Total}} data</div>
       </div>
-      <div class="bulk-bar">
-        <button type="submit" class="btn-del btn-del--bulk">Hapus terpilih</button>
-      </div>
-      </form>
-      {{else}}
-      <div class="empty">Belum ada data user. Data akan muncul setelah user mengisi form.</div>
-      {{end}}
-    </div>
 
-    <div class="pagination">
-      {{if gt .Page 1}}
-      <a href="/admin?page={{add .Page -1}}&source={{.Source}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}" class="btn-ghost-sm">← Prev</a>
-      {{end}}
-      {{if lt .Page .MaxPage}}
-      <a href="/admin?page={{add .Page 1}}&source={{.Source}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}" class="btn-ghost-sm">Next →</a>
-      {{end}}
-    </div>
-  </div>
+      <!-- TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;opacity:0.6">
+              <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18"/>
+            </svg>
+            Data {{if eq .Source "gold"}}Awan Gold{{else}}Awan Peduli{{end}}
+          </div>
+          <span class="card-count">{{len .Submissions}} baris</span>
+        </div>
+
+        {{if .Submissions}}
+        <form method="post" action="/admin/bulk-delete" data-confirm="Hapus semua data yang dipilih?">
+          <input type="hidden" name="source" value="{{.Source}}">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="td-check"><input type="checkbox" data-select-all title="Pilih semua"></th>
+                  <th class="td-index">#</th>
+                  {{range .Fields}}<th>{{.Label}}</th>{{end}}
+                  <th class="hide-mobile">Waktu</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {{range $i, $s := .Submissions}}
+                <tr>
+                  <td class="td-check"><input type="checkbox" name="ids" value="{{$s.ID}}"></td>
+                  <td class="td-index">{{add $i 1}}</td>
+                  {{range $.Fields}}
+                  <td title="{{index $s.Data .Name}}">{{index $s.Data .Name}}</td>
+                  {{end}}
+                  <td class="td-date hide-mobile">{{formatTime $s.CreatedAt}}</td>
+                  <td class="td-actions">
+                    <button type="submit" class="btn-del" formaction="/admin/delete?id={{$s.ID}}&source={{$.Source}}" data-confirm="Hapus data ini?">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px">
+                        <polyline points="3 6 5 6 21 6"/>
+                        <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+                        <path d="M9 6V4h6v2"/>
+                      </svg>
+                      Hapus
+                    </button>
+                  </td>
+                </tr>
+                {{end}}
+              </tbody>
+            </table>
+          </div>
+          <div class="bulk-bar">
+            <span class="bulk-bar-info">Pilih baris lalu hapus sekaligus</span>
+            <button type="submit" class="btn-del btn-del--bulk">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+                <polyline points="3 6 5 6 21 6"/>
+                <path d="M19 6l-1 14H6L5 6"/>
+              </svg>
+              Hapus Terpilih
+            </button>
+          </div>
+        </form>
+        {{else}}
+        <div class="empty">
+          <div class="empty-icon">📭</div>
+          <div class="empty-title">Belum ada data</div>
+          <div class="empty-sub">Data akan muncul setelah user mengisi form.</div>
+        </div>
+        {{end}}
+      </div>
+
+      <!-- PAGINATION -->
+      <div class="pagination">
+        {{if gt .Page 1}}
+        <a href="/admin?page={{add .Page -1}}&source={{.Source}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}">← Prev</a>
+        {{end}}
+        <span style="color:var(--text-3);font-size:12px;font-family:var(--mono);">{{.Page}} / {{.MaxPage}}</span>
+        {{if lt .Page .MaxPage}}
+        <a href="/admin?page={{add .Page 1}}&source={{.Source}}{{if .Q}}&q={{.Q}}{{end}}{{if .FieldKey}}&field={{.FieldKey}}{{end}}">Next →</a>
+        {{end}}
+      </div>
+
+    </div><!-- end page-container -->
+  </div><!-- end main-content -->
+</div><!-- end admin-layout -->
 </body>
 </html>

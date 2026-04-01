@@ -3,142 +3,245 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Kelola Form — Admin</title>
-  <link rel="stylesheet" href="/static/css/admin-form.css">
-  <link rel="stylesheet" href="/static/css/admin-nav.css">
+  <title>Kelola Form — Awan Admin</title>
+  <link rel="stylesheet" href="/static/css/admin-dashboard.css">
   <script src="/static/js/theme.js" defer></script>
   <script src="/static/js/admin-form.js" defer></script>
 </head>
 <body>
-  <header>
-    <h1>Kelola Form</h1>
-    {{template "admin-nav" .}}
-  </header>
+<div class="admin-layout">
+  {{template "admin-nav" .}}
 
-  <div class="container">
-    <p class="form-help">
-      Field di bawah ini menentukan input yang tampil di halaman <strong>Awan Peduli</strong> (<code>/form</code>). Pratinjau lewat menu <strong>Preview</strong> di atas.
-      Kolom <strong>Name</strong> = nama field saat POST. Untuk <strong>select</strong>, isi opsi dipisah koma (contoh: <code>Laki-laki,Perempuan</code>).
-      Simulasi cicilan di modal hanya muncul jika ada field bernama <code>loan_amount</code> (tipe number) dan <code>tenor</code> (select atau number).
-    </p>
-
-    {{if eq .Mode "list"}}
-    <div class="form-actions">
-      <a href="{{.FormAdminPath}}/add" class="btn">+ Tambah field</a>
-    </div>
-    <div class="card">
-      <div class="card-header">Daftar field</div>
-      {{if .Fields}}
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Urutan</th>
-              <th>Label</th>
-              <th>Name (POST)</th>
-              <th>Tipe</th>
-              <th>Wajib</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {{range .Fields}}
-            <tr>
-              <td>{{.SortOrder}}</td>
-              <td>{{.Label}}</td>
-              <td><code class="field-name">{{.Name}}</code></td>
-              <td>{{.FieldType}}</td>
-              <td>{{if .Required}}Ya{{else}}Tidak{{end}}</td>
-              <td class="row-actions">
-                <a href="{{$.FormAdminPath}}/edit?id={{.ID}}" class="btn-link">Edit</a>
-                <form method="post" action="{{$.FormAdminPath}}/delete?id={{.ID}}" class="inline-form" data-confirm="Hapus field ini?">
-                  <button type="submit" class="btn btn-danger">Hapus</button>
-                </form>
-              </td>
-            </tr>
-            {{end}}
-          </tbody>
-        </table>
+  <div class="main-content">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="topbar-breadcrumb">
+        <span>Awan Admin</span>
+        <span class="sep">/</span>
+        <span class="current">Kelola Form</span>
       </div>
-      {{else}}
-      <div class="empty">Belum ada field. Tambahkan field pertama.</div>
+      <div class="topbar-actions">
+        {{if eq .Mode "list"}}
+        <a href="{{.FormAdminPath}}/add" class="topbar-btn primary">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+            <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          Tambah Field
+        </a>
+        {{end}}
+        <a href="{{.FormPagePath}}" target="_blank" rel="noopener" class="topbar-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+          Preview Form
+        </a>
+      </div>
+    </div>
+
+    <div class="page-container">
+      <div class="page-header">
+        <h1 class="page-title">
+          {{if eq .Mode "add"}}Tambah Field Baru
+          {{else if eq .Mode "edit"}}Edit Field
+          {{else}}Kelola Form Awan Peduli
+          {{end}}
+        </h1>
+        <p class="page-subtitle">
+          {{if eq .Mode "list"}}Atur field yang ditampilkan di halaman <code>/form</code>.
+          {{else if eq .Mode "add"}}Isi detail field yang akan ditambahkan ke form.
+          {{else}}Ubah konfigurasi field yang sudah ada.
+          {{end}}
+        </p>
+      </div>
+
+      {{if eq .Mode "list"}}
+      <!-- HINT -->
+      <div class="form-hint" style="margin-bottom:20px;">
+        Field di bawah menentukan input yang tampil di form <strong>Awan Peduli</strong> (<code>/form</code>). Kolom <strong>Name</strong> = nama field saat POST. Untuk tipe <code>select</code>, isi opsi dipisah koma, misal: <code>Laki-laki,Perempuan</code>. Simulasi cicilan aktif jika ada field <code>loan_amount</code> dan <code>tenor</code>.
+      </div>
+
+      <!-- TABLE -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px;opacity:0.6">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Daftar Field Form
+          </div>
+          <span class="card-count">{{len .Fields}} field</span>
+        </div>
+        {{if .Fields}}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:60px;">Urutan</th>
+                <th>Label</th>
+                <th>Name (POST)</th>
+                <th>Tipe</th>
+                <th>Wajib</th>
+                <th style="text-align:right;">Aksi</th>
+              </tr>
+            </thead>
+            <tbody>
+              {{range .Fields}}
+              <tr>
+                <td><span class="sort-order-badge">{{.SortOrder}}</span></td>
+                <td style="font-weight:600;color:var(--text);">{{.Label}}</td>
+                <td><code>{{.Name}}</code></td>
+                <td><span class="type-badge">{{.FieldType}}</span></td>
+                <td>
+                  {{if .Required}}
+                  <span class="required-yes">✓ Ya</span>
+                  {{else}}
+                  <span class="required-no">— Tidak</span>
+                  {{end}}
+                </td>
+                <td>
+                  <div class="row-actions">
+                    <a href="{{$.FormAdminPath}}/edit?id={{.ID}}" class="btn-link">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Edit
+                    </a>
+                    <form method="post" action="{{$.FormAdminPath}}/delete?id={{.ID}}" class="inline-form" data-confirm="Hapus field '{{.Label}}'?">
+                      <button type="submit" class="btn-del">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" style="width:12px;height:12px">
+                          <polyline points="3 6 5 6 21 6"/>
+                          <path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+                        </svg>
+                        Hapus
+                      </button>
+                    </form>
+                  </div>
+                </td>
+              </tr>
+              {{end}}
+            </tbody>
+          </table>
+        </div>
+        {{else}}
+        <div class="empty">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Belum ada field</div>
+          <div class="empty-sub">Klik "Tambah Field" untuk membuat field pertama.</div>
+        </div>
+        {{end}}
+      </div>
       {{end}}
-    </div>
-    {{end}}
 
-    {{if eq .Mode "add"}}
-    <div class="card">
-      <div class="card-header">Field baru</div>
-      <form method="post" action="{{.FormAdminPath}}/add" class="field-form">
-        <label for="label">Label (tampil ke user)</label>
-        <input type="text" id="label" name="label" required>
-
-        <label for="name">Name (unik, huruf/angka/underscore)</label>
-        <input type="text" id="name" name="name" required pattern="[a-zA-Z0-9_]+" placeholder="contoh: phone_1">
-
-        <label for="field_type">Tipe field</label>
-        <select id="field_type" name="field_type" required>
-          <option value="text">text</option>
-          <option value="email">email</option>
-          <option value="number">number</option>
-          <option value="date">date</option>
-          <option value="tel">tel</option>
-          <option value="textarea">textarea</option>
-          <option value="select">select</option>
-        </select>
-
-        <label for="options">Opsi (hanya untuk select, pisahkan koma)</label>
-        <input type="text" id="options" name="options" placeholder="Opsi1,Opsi2">
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="required" value="1" checked> Wajib diisi
-        </label>
-
-        <div class="form-actions">
-          <button type="submit" class="btn">Simpan</button>
-          <a href="{{.FormAdminPath}}" class="btn btn-ghost">Batal</a>
+      {{if eq .Mode "add"}}
+      <div class="form-card">
+        <div class="card-header">
+          <div class="card-title">Detail Field Baru</div>
         </div>
-      </form>
-    </div>
-    {{end}}
+        <form method="post" action="{{.FormAdminPath}}/add">
+          <div class="field-form">
+            <div class="fg">
+              <label for="label">Label (tampil ke user)</label>
+              <input type="text" id="label" name="label" required placeholder="contoh: Nama Lengkap">
+            </div>
+            <div class="fg">
+              <label for="name">Name (unik, huruf/angka/underscore)</label>
+              <input type="text" id="name" name="name" required pattern="[a-zA-Z0-9_]+" placeholder="contoh: full_name">
+              <div class="help-text">// Digunakan sebagai key saat POST form</div>
+            </div>
+            <div class="fg">
+              <label for="field_type">Tipe Field</label>
+              <select id="field_type" name="field_type" required>
+                <option value="text">text</option>
+                <option value="email">email</option>
+                <option value="number">number</option>
+                <option value="date">date</option>
+                <option value="tel">tel</option>
+                <option value="textarea">textarea</option>
+                <option value="select">select</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label for="options">Opsi (khusus tipe select, pisahkan koma)</label>
+              <input type="text" id="options" name="options" placeholder="Opsi1,Opsi2,Opsi3">
+            </div>
+            <div class="fg">
+              <label class="checkbox-label">
+                <input type="checkbox" name="required" value="1" checked>
+                Wajib diisi
+              </label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Simpan Field
+            </button>
+            <a href="{{.FormAdminPath}}" class="btn-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+      {{end}}
 
-    {{if eq .Mode "edit"}}
-    {{with .EditField}}
-    <div class="card">
-      <div class="card-header">Edit field</div>
-      <form method="post" action="{{$.FormAdminPath}}/edit?id={{.ID}}" class="field-form">
-        <label for="label">Label</label>
-        <input type="text" id="label" name="label" value="{{.Label}}" required>
-
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" value="{{.Name}}" required pattern="[a-zA-Z0-9_]+">
-
-        <label for="field_type">Tipe field</label>
-        <select id="field_type" name="field_type" required>
-          <option value="text" {{if eq .FieldType "text"}}selected{{end}}>text</option>
-          <option value="email" {{if eq .FieldType "email"}}selected{{end}}>email</option>
-          <option value="number" {{if eq .FieldType "number"}}selected{{end}}>number</option>
-          <option value="date" {{if eq .FieldType "date"}}selected{{end}}>date</option>
-          <option value="tel" {{if eq .FieldType "tel"}}selected{{end}}>tel</option>
-          <option value="textarea" {{if eq .FieldType "textarea"}}selected{{end}}>textarea</option>
-          <option value="select" {{if eq .FieldType "select"}}selected{{end}}>select</option>
-        </select>
-
-        <label for="options">Opsi (select)</label>
-        <input type="text" id="options" name="options" value="{{.Options}}">
-
-        <label class="checkbox-label">
-          <input type="checkbox" name="required" value="1" {{if .Required}}checked{{end}}> Wajib diisi
-        </label>
-
-        <div class="form-actions">
-          <button type="submit" class="btn">Simpan</button>
-          <a href="{{$.FormAdminPath}}" class="btn btn-ghost">Batal</a>
+      {{if eq .Mode "edit"}}
+      {{with .EditField}}
+      <div class="form-card">
+        <div class="card-header">
+          <div class="card-title">Edit Field: <code>{{.Name}}</code></div>
         </div>
-      </form>
+        <form method="post" action="{{$.FormAdminPath}}/edit?id={{.ID}}">
+          <div class="field-form">
+            <div class="fg">
+              <label for="label">Label</label>
+              <input type="text" id="label" name="label" value="{{.Label}}" required>
+            </div>
+            <div class="fg">
+              <label for="name">Name</label>
+              <input type="text" id="name" name="name" value="{{.Name}}" required pattern="[a-zA-Z0-9_]+">
+            </div>
+            <div class="fg">
+              <label for="field_type">Tipe Field</label>
+              <select id="field_type" name="field_type" required>
+                <option value="text"     {{if eq .FieldType "text"}}selected{{end}}>text</option>
+                <option value="email"    {{if eq .FieldType "email"}}selected{{end}}>email</option>
+                <option value="number"   {{if eq .FieldType "number"}}selected{{end}}>number</option>
+                <option value="date"     {{if eq .FieldType "date"}}selected{{end}}>date</option>
+                <option value="tel"      {{if eq .FieldType "tel"}}selected{{end}}>tel</option>
+                <option value="textarea" {{if eq .FieldType "textarea"}}selected{{end}}>textarea</option>
+                <option value="select"   {{if eq .FieldType "select"}}selected{{end}}>select</option>
+              </select>
+            </div>
+            <div class="fg">
+              <label for="options">Opsi (select)</label>
+              <input type="text" id="options" name="options" value="{{.Options}}">
+            </div>
+            <div class="fg">
+              <label class="checkbox-label">
+                <input type="checkbox" name="required" value="1" {{if .Required}}checked{{end}}>
+                Wajib diisi
+              </label>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+              Simpan Perubahan
+            </button>
+            <a href="{{$.FormAdminPath}}" class="btn-secondary">Batal</a>
+          </div>
+        </form>
+      </div>
+      {{end}}
+      {{end}}
+
     </div>
-    {{end}}
-    {{end}}
   </div>
+</div>
 </body>
 </html>
