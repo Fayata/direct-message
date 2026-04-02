@@ -35,7 +35,22 @@
           </svg>
           Export PDF
         </a>
+        <a href="/admin/export/key" class="topbar-btn topbar-btn--ghost" download>
+          Download Key (ZIP)
+        </a>
+        <span class="topbar-hint">Setelah key dibuat, export Excel/PDF otomatis jadi file `.enc`.</span>
       </div>
+    </div>
+
+    <div class="topbar topbar-decrypt">
+      <div class="topbar-breadcrumb">
+        <span class="current">Decrypt File Export</span>
+      </div>
+      <form method="post" action="/admin/export/decrypt" enctype="multipart/form-data" class="topbar-enc-form">
+        <input type="file" name="encrypted_file" class="topbar-file" accept=".enc" required>
+        <input type="file" name="key_file" class="topbar-file" accept=".zip" required>
+        <button type="submit" class="topbar-btn topbar-btn--enc">Decrypt & Download</button>
+      </form>
     </div>
 
     <!-- PAGE CONTENT -->

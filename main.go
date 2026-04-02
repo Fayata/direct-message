@@ -31,6 +31,8 @@ func main() {
 	http.HandleFunc("/admin/form2/", controllers.RequireAdmin(controllers.AdminForm2Handler))
 	http.HandleFunc("/admin/form2", controllers.RequireAdmin(controllers.AdminForm2Handler))
 	http.HandleFunc("/admin/export", controllers.RequireAdmin(controllers.AdminExportHandler))
+	http.HandleFunc("/admin/export/key", controllers.RequireAdmin(controllers.AdminExportKeyHandler))
+	http.HandleFunc("/admin/export/decrypt", controllers.RequireAdmin(controllers.AdminExportDecryptHandler))
 	http.HandleFunc("/admin", controllers.RequireAdmin(controllers.AdminDashboardHandler))
 	http.HandleFunc("/admin/", controllers.RequireAdmin(controllers.AdminDashboardHandler))
 

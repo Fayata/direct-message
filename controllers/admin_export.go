@@ -1,8 +1,20 @@
 package controllers
 
 import (
+	"archive/zip"
+	"bytes"
+	"crypto/rand"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jung-kurt/gofpdf"
@@ -10,7 +22,7 @@ import (
 	"phising/models"
 )
 
-func writeExcelDynamic(w http.ResponseWriter, fields []models.FormField, submissions []models.Submission) {
+func buildExcelDynamic(fields []models.FormField, submissions []models.Submission) ([]byte, error) {
 	f := excelize.NewFile()
 	sheet := "Sheet1"
 	colIdx := 1
@@ -39,14 +51,15 @@ func writeExcelDynamic(w http.ResponseWriter, fields []models.FormField, submiss
 		}
 		_ = f.SetCellValue(sheet, c, createdStr)
 	}
-	w.Header().Set("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-	w.Header().Set("Content-Disposition", `attachment; filename="data-user-`+time.Now().Format("20060102-150405")+`.xlsx"`)
-	if err := f.Write(w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	var buf bytes.Buffer
+	if err := f.Write(&buf); err != nil {
+		return nil, err
 	}
+	return buf.Bytes(), nil
 }
 
-func writePDFDynamic(w http.ResponseWriter, fields []models.FormField, submissions []models.Submission) {
+func buildPDFDynamic(fields []models.FormField, submissions []models.Submission) ([]byte, error) {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetAutoPageBreak(true, 15)
 	pdf.AddPage()
@@ -80,11 +93,175 @@ func writePDFDynamic(w http.ResponseWriter, fields []models.FormField, submissio
 		pdf.CellFormat(colW, 5, createdStr, "1", 0, "L", false, 0, "")
 		pdf.Ln(-1)
 	}
-	w.Header().Set("Content-Type", "application/pdf")
-	w.Header().Set("Content-Disposition", `attachment; filename="data-user-`+time.Now().Format("20060102-150405")+`.pdf"`)
-	if err := pdf.Output(w); err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+
+	var buf bytes.Buffer
+	if err := pdf.Output(&buf); err != nil {
+		return nil, err
 	}
+	return buf.Bytes(), nil
+}
+
+func writeAttachment(w http.ResponseWriter, contentType, filename string, body []byte) {
+	w.Header().Set("Content-Type", contentType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf(`attachment; filename="%s"`, filename))
+	_, _ = io.Copy(w, bytes.NewReader(body))
+}
+
+func randomExportKey() (string, error) {
+	b := make([]byte, 24) // 32 chars-ish after base64url
+	if _, err := rand.Read(b); err != nil {
+		return "", err
+	}
+	return base64.RawURLEncoding.EncodeToString(b), nil
+}
+
+func buildKeyBundleZip() (zipBody []byte, key string, err error) {
+	key, err = randomExportKey()
+	if err != nil {
+		return nil, "", err
+	}
+	var buf bytes.Buffer
+	zw := zip.NewWriter(&buf)
+
+	meta := map[string]string{
+		"format":      "phising-export-key-v1",
+		"generatedAt": time.Now().Format(time.RFC3339),
+		"note":        "Jaga file ini. Key dipakai untuk encrypted export.",
+	}
+	metaBytes, _ := json.MarshalIndent(meta, "", "  ")
+
+	f1, err := zw.Create("README.txt")
+	if err != nil {
+		return nil, "", err
+	}
+	_, _ = f1.Write([]byte("File key untuk membuka export terenkripsi.\nSimpan aman, jangan dibagikan.\n"))
+
+	f2, err := zw.Create("key.txt")
+	if err != nil {
+		return nil, "", err
+	}
+	_, _ = f2.Write([]byte(key))
+
+	f3, err := zw.Create("meta.json")
+	if err != nil {
+		return nil, "", err
+	}
+	_, _ = f3.Write(metaBytes)
+
+	if err := zw.Close(); err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), key, nil
+}
+
+func readKeyFromZip(zipData []byte) (string, error) {
+	zr, err := zip.NewReader(bytes.NewReader(zipData), int64(len(zipData)))
+	if err != nil {
+		return "", fmt.Errorf("invalid key zip: %w", err)
+	}
+	for _, f := range zr.File {
+		if !strings.EqualFold(f.Name, "key.txt") {
+			continue
+		}
+		rc, err := f.Open()
+		if err != nil {
+			return "", err
+		}
+		defer rc.Close()
+		b, err := io.ReadAll(rc)
+		if err != nil {
+			return "", err
+		}
+		key := strings.TrimSpace(string(b))
+		if key == "" {
+			return "", errors.New("key.txt kosong")
+		}
+		return key, nil
+	}
+	return "", errors.New("key.txt tidak ditemukan di zip")
+}
+
+func encryptWithPython(in []byte, passphrase string) ([]byte, error) {
+	script := filepath.Join("tools", "encrypt_export.py")
+	if _, err := os.Stat(script); err != nil {
+		return nil, fmt.Errorf("encrypt script not found: %w", err)
+	}
+	if passphrase == "" {
+		return nil, errors.New("empty passphrase")
+	}
+
+	inFile, err := os.CreateTemp("", "phising-export-*.bin")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(inFile.Name())
+	if _, err := inFile.Write(in); err != nil {
+		_ = inFile.Close()
+		return nil, err
+	}
+	_ = inFile.Close()
+
+	outFile, err := os.CreateTemp("", "phising-export-*.enc")
+	if err != nil {
+		return nil, err
+	}
+	outName := outFile.Name()
+	_ = outFile.Close()
+	defer os.Remove(outName)
+
+	cmd := exec.Command("python", script, "--mode", "encrypt", "--in", inFile.Name(), "--out", outName, "--passphrase", passphrase)
+	// Run from repo root so relative "tools/..." works.
+	cmd.Dir = "."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("python encrypt failed: %w (%s)", err, strings.TrimSpace(string(out)))
+	}
+	enc, err := os.ReadFile(outName)
+	if err != nil {
+		return nil, err
+	}
+	return enc, nil
+}
+
+func decryptWithPython(in []byte, passphrase string) ([]byte, error) {
+	script := filepath.Join("tools", "encrypt_export.py")
+	if _, err := os.Stat(script); err != nil {
+		return nil, fmt.Errorf("decrypt script not found: %w", err)
+	}
+	if passphrase == "" {
+		return nil, errors.New("empty passphrase")
+	}
+
+	inFile, err := os.CreateTemp("", "phising-encrypted-*.enc")
+	if err != nil {
+		return nil, err
+	}
+	defer os.Remove(inFile.Name())
+	if _, err := inFile.Write(in); err != nil {
+		_ = inFile.Close()
+		return nil, err
+	}
+	_ = inFile.Close()
+
+	outFile, err := os.CreateTemp("", "phising-decrypted-*.bin")
+	if err != nil {
+		return nil, err
+	}
+	outName := outFile.Name()
+	_ = outFile.Close()
+	defer os.Remove(outName)
+
+	cmd := exec.Command("python", script, "--mode", "decrypt", "--in", inFile.Name(), "--out", outName, "--passphrase", passphrase)
+	cmd.Dir = "."
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("python decrypt failed (key salah / file rusak): %w (%s)", err, strings.TrimSpace(string(out)))
+	}
+	plain, err := os.ReadFile(outName)
+	if err != nil {
+		return nil, err
+	}
+	return plain, nil
 }
 
 func truncate(s string, max int) string {

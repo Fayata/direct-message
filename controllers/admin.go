@@ -3,7 +3,9 @@ package controllers
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -570,34 +572,137 @@ func AdminExportHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	format := r.URL.Query().Get("format")
 	source := strings.TrimSpace(strings.ToLower(r.URL.Query().Get("source")))
+	raw, ctype, plainName, err := buildExportPayload(r.Context(), format, source)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	sess, _ := adminStore.Get(r, adminSessionName)
+	key, _ := sess.Values["export_key"].(string)
+	if strings.TrimSpace(key) == "" {
+		http.Error(w, "Generate key ZIP dulu sebelum download export.", http.StatusBadRequest)
+		return
+	}
+	encBody, err := encryptWithPython(raw, key)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	_ = ctype // encrypted payload dikirim sebagai octet-stream
+	writeAttachment(w, "application/octet-stream", plainName+".enc", encBody)
+}
+
+func AdminExportKeyHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	zipBody, key, err := buildKeyBundleZip()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	// Persist key in admin session so next export is auto-encrypted in background.
+	sess, _ := adminStore.Get(r, adminSessionName)
+	sess.Values["export_key"] = key
+	_ = sess.Save(r, w)
+
+	name := fmt.Sprintf("export-key-%s.zip", time.Now().Format("20060102-150405"))
+	writeAttachment(w, "application/zip", name, zipBody)
+}
+
+func AdminExportDecryptHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		http.Error(w, "gagal parse form upload", http.StatusBadRequest)
+		return
+	}
+	keyFile, _, err := r.FormFile("key_file")
+	if err != nil {
+		http.Error(w, "file key zip wajib diupload", http.StatusBadRequest)
+		return
+	}
+	defer keyFile.Close()
+	keyZip, err := io.ReadAll(keyFile)
+	if err != nil {
+		http.Error(w, "gagal membaca key file", http.StatusBadRequest)
+		return
+	}
+	passphrase, err := readKeyFromZip(keyZip)
+	if err != nil {
+		http.Error(w, "key file tidak valid: "+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	encFile, encHeader, err := r.FormFile("encrypted_file")
+	if err != nil {
+		http.Error(w, "file encrypted wajib diupload", http.StatusBadRequest)
+		return
+	}
+	defer encFile.Close()
+	encBlob, err := io.ReadAll(encFile)
+	if err != nil {
+		http.Error(w, "gagal membaca file encrypted", http.StatusBadRequest)
+		return
+	}
+
+	raw, err := decryptWithPython(encBlob, passphrase)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	outName := strings.TrimSpace(encHeader.Filename)
+	outName = strings.TrimSuffix(outName, ".enc")
+	if outName == "" || outName == encHeader.Filename {
+		outName = "decrypted-data.bin"
+	}
+	ctype := "application/octet-stream"
+	if strings.HasSuffix(strings.ToLower(outName), ".pdf") {
+		ctype = "application/pdf"
+	}
+	if strings.HasSuffix(strings.ToLower(outName), ".xlsx") {
+		ctype = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+	}
+	writeAttachment(w, ctype, outName, raw)
+}
+
+func buildExportPayload(ctx context.Context, format, source string) ([]byte, string, string, error) {
 	var (
 		fields      []models.FormField
 		submissions []models.Submission
 		err         error
 	)
 	if source == "gold" {
-		fields, _ = models.ListForm2Fields(r.Context())
-		submissions, err = models.ListForm2Submissions(r.Context())
+		fields, _ = models.ListForm2Fields(ctx)
+		submissions, err = models.ListForm2Submissions(ctx)
 		if err != nil {
 			log.Printf("ListForm2Submissions: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return nil, "", "", err
 		}
 	} else {
-		fields, _ = models.ListFormFields(r.Context())
-		submissions, err = models.ListSubmissions(r.Context())
+		fields, _ = models.ListFormFields(ctx)
+		submissions, err = models.ListSubmissions(ctx)
 		if err != nil {
 			log.Printf("ListSubmissions: %v", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
+			return nil, "", "", err
 		}
+	}
+	ts := time.Now().Format("20060102-150405")
+	prefix := "data-user"
+	if source == "gold" {
+		prefix = "data-user-awangold"
 	}
 	switch format {
 	case "xlsx", "excel":
-		writeExcelDynamic(w, fields, submissions)
+		raw, err := buildExcelDynamic(fields, submissions)
+		return raw, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fmt.Sprintf("%s-%s.xlsx", prefix, ts), err
 	case "pdf":
-		writePDFDynamic(w, fields, submissions)
+		raw, err := buildPDFDynamic(fields, submissions)
+		return raw, "application/pdf", fmt.Sprintf("%s-%s.pdf", prefix, ts), err
 	default:
-		http.Error(w, "format tidak valid (gunakan format=xlsx atau format=pdf)", http.StatusBadRequest)
+		return nil, "", "", fmt.Errorf("format tidak valid (gunakan format=xlsx atau format=pdf)")
 	}
 }

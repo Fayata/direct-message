@@ -13,7 +13,7 @@ import (
 )
 
 var (
-	indexTmpl = template.Must(template.ParseFiles(filepath.Join("views", "index.html")))
+	indexTmpl    = template.Must(template.ParseFiles(filepath.Join("views", "index.html")))
 	formTplFuncs = template.FuncMap{
 		"splitOptions": func(s string) []string {
 			if s == "" {
@@ -130,12 +130,12 @@ func SendMessageHandler(w http.ResponseWriter, r *http.Request) {
 
 func formData(settings map[string]string, success bool, errMsg string) map[string]any {
 	data := map[string]any{
-		"Success": success,
-		"Error":   errMsg,
-		"FormTitle":           settings["form_title"],
-		"FormSubtitle":        settings["form_subtitle"],
-		"FormSuccessMessage":  settings["form_success_message"],
-		"FormHelpText":        settings["form_help_text"],
+		"Success":            success,
+		"Error":              errMsg,
+		"FormTitle":          settings["form_title"],
+		"FormSubtitle":       settings["form_subtitle"],
+		"FormSuccessMessage": settings["form_success_message"],
+		"FormHelpText":       settings["form_help_text"],
 	}
 	if data["FormTitle"] == "" {
 		data["FormTitle"] = "Form Data Diri"
@@ -210,8 +210,6 @@ func buildFormPageData(settings map[string]string, success bool, errMsg string, 
 	return data
 }
 
-// buildFormPageDataSingleStep dipakai untuk form yang hanya punya 1 halaman input,
-// namun tetap bisa punya step konfirmasi (tanpa field tambahan).
 func buildFormPageDataSingleStep(settings map[string]string, success bool, errMsg string, fields []models.FormField, values map[string]string) map[string]any {
 	data := formData(settings, success, errMsg)
 	data["Fields"] = fields
@@ -374,4 +372,3 @@ func Form2Handler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
 	}
 }
-
